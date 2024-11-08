@@ -301,10 +301,10 @@ final关键字 ： **修饰类/方法 变量**
 
 核心：
 
-无论子类是否显式调用父类的构造方法，父类的构造方法总会在子类的构造方法中执行。这是因为 Java 需要确保在创建子类对象时，父类的部分能够被正确地初始化。
+**无论子类是否显式调用父类的构造方法，父类的构造方法总会在子类的构造方法中执行。这是因为 Java 需要确保在创建子类对象时，父类的部分能够被正确地初始化。**
 
-- 如果子类的构造方法没有显式调用父类的构造方法，那么 Java 编译器会**隐式**插入一个对父类**无参构造方法**的调用（`super()`）。
-- 如果父类没有无参的构造方法，而子类没有显式调用父类的有参构造方法，那么编译会失败。
+- 如果子类的构造方法**没有显式调用父类**的构造方法，那么 Java 编译器会**隐式**插入一个对父类**无参构造方法**的调用（`super()`）。
+- 如果父类没有无参的构造方法，而子类**没有显式调用父类**的有参构造方法，那么编译会失败。
 
 ---
 
@@ -339,6 +339,164 @@ final关键字 ： **修饰类/方法 变量**
 # Java 集合操作
 
 **acwing**  
+
+
+
+# java 基础
+
+
+
+**多个类在一个文件中的规则：**
+
+- 在Java中，一个源文件可以包含多个类
+- 但只能有一个public类，且public类的名字必须与文件名相同
+- 其他类（如Mypanel）是包访问级别的类，只能在同一个包内访问
+
+
+
+核心：
+
+java一切皆对象
+
+**main方法是函数的入口方法 **  执行这个类 一定会先从主方法开始执行！！！ 
+
+## 画图基本用法
+
+
+
+~~~java
+package draw;
+import javax.swing.*;
+import java.awt.*;
+// 导包和包路径 放置顺序注意！！！
+
+public class DrawCircle extends JFrame{
+    private Mypanel mp = null;// 定义一个画板
+    public DrawCircle(){// 构造器
+        mp = new Mypanel();
+        this.add(mp);//把画板放到框架窗口中
+        this.setSize(1000,600);
+        this.setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 关闭窗口后结束程序的执行
+        // 设置框架的属性
+    }
+    public static void main(String[] args) { // 主方法
+        new DrawCircle(); // 一new （创建）就会调用构造方法
+
+    }
+}
+class Mypanel extends JPanel {
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.drawOval(10,10,100,100); // 起始点从圆的外切正方形的左上角顶点开始！
+        g.drawLine(10,10,100,100);
+        g.setColor(Color.red); //设置画笔颜色
+//        g.setFont(new Font("隶书",Font.BOLD,50)); // 设置画笔字体
+
+//        g.drawString("lunaFreya",100,100);
+//        Image img = Toolkit.getDefaultToolkit().getImage(Panel.class.getResource("image/Freya.png")); src:引入图片写法
+//        g.drawImage(img, 10, 10, 500,500,this);
+
+
+
+    }
+}
+~~~
+
+**查文档能力 ：java 8 以及各种框架！！** Graphics 类用法
+
+**类比能力 ：java画图体系类似css中position的定位坐标系**
+
+
+
+**hero 继承了tank类 ---》封装思想**
+
+~~~java
+// Mypanel.java
+package TankGame;
+import java.awt.*;
+import javax.swing.*;
+// 决定画什么内容
+public class Mypanel extends JPanel {
+    Hero hero = null;// 定义坦克
+    public Mypanel() {
+        hero = new Hero(100,100); // 初始化坦克对象
+
+    }
+    // 将画坦克封装为一个方法
+    // 传入 坐标  朝向  画笔  阵营
+    public void drawTank(int x, int y, int direction, Graphics g, int bloc) {
+        if( bloc == 0) {
+            g.setColor(Color.green);
+        }
+        else {
+            g.setColor(Color.red);
+        }
+        switch (direction) {
+            case 0:
+                g.fill3DRect(x,y,10,60,false);
+                g.fill3DRect(x+30,y,10,60,false);
+                g.fill3DRect(x+10,y+10,20,40,false);
+                g.fillOval(x+10,y+20,20,20);
+                g.drawLine(x+20,y+30,x+20,y);
+                break;
+            default:
+                System.out.println("暂时没有处理");
+        }
+
+
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.fillRect(0,0,1000,750); // 对于画板(面板)界面：填充矩形 颜色默认为黑色
+        drawTank(hero.getX(),hero.getY(),0, g,0);
+        drawTank(hero.getX(),hero.getY()+100,0, g,1);
+        // 注意·传递的参数
+
+
+
+//        g.setColor(Color.white);
+//        g.setFont(new Font("Times New Roman",Font.BOLD,50));
+//        g.drawString("Game Over",350,100);
+// paint 方法会自动执行
+
+    }
+}
+
+~~~
+
+~~~java
+// round01.java
+package TankGame;
+
+import javax.swing.*;
+
+public class Round01 extends JFrame {
+    private Mypanel mp = null; // 从包中拿另一个类（public）
+    public static void main(String[] args) {
+
+        Round01 round01 = new Round01();
+
+    }
+    public Round01() {
+        mp = new Mypanel(); // 实例化面板
+        this.add(mp); // 窗口中填放画板
+        this.setSize(1000, 750); // 设定窗口大小
+        this.setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+}
+
+~~~
+
+
+
+
 
 
 
