@@ -2,14 +2,14 @@ package TankGame;
 
 import javax.swing.*;
 
-public class Round01 extends JFrame {
+public class Round2 extends JFrame {
     private Mypanel mp = null; // 从包中拿另一个类（public）
     public static void main(String[] args) {
 
-        Round01 round01 = new Round01();
+        Round2 round2 = new Round2();
 
     }
-    public Round01() {
+    public Round2() {
         mp = new Mypanel(); // 实例化面板
         this.add(mp); // 窗口中填放画板
         this.addKeyListener(mp);

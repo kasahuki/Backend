@@ -344,7 +344,31 @@ final关键字 ： **修饰类/方法 变量**
 
 # java 基础
 
+## Tips
 
+**1.边看视频边写代码。** **先看视频了解一个大概** 模拟出流程后 然后自己手写 最后回过头看哪里有缺或是哪里不够好（总结方法论）
+
+**2.在没有充分了解Java这个行业之前贸然开始 自信，破釜沉舟 **  
+
+学习一个技能技术前 要懂得 it  **who （谁发明）  when（什么时候发明） whether （这个技术是否过时 是否可替代）what（这个技术是什么） why（为什么要发明这个技术） how（这个技术长什么样，如何学习，如何了解学习渠道）**
+
+学东西光学知识点没p用 一定要有应用场景的实现！！！
+
+ **3.学习不专注**  起码得保证45min不被打扰专注时间
+
+ **4.不写测试代码 **  判空指涉
+
+**5.拒绝学习代码规范，展示代码**   不要害怕别人说自己菜
+
+**6.碰见bug不思考就发问**   foremost : 学会自己看，这样下次碰到了就会解决了，实在不行就上网解决，贵在坚持，不要轻易放弃。最后实在不行了在问别人！
+
+**7.手懒不想动 **   **写程序不能光想和光临摹别人的代码 要自己实现 先有个全局观 然后再从细节出发**
+
+ **8.没有极致的求知精神** 
+
+**9.没有目的的去写代码，不刻意的练习**   要知道自己在干嘛
+
+**10.急于求成想快速精通。** 让自己痛苦才是学习的最好buff
 
 **多个类在一个文件中的规则：**
 
@@ -360,7 +384,9 @@ java一切皆对象
 
 **main方法是函数的入口方法 **  执行这个类 一定会先从主方法开始执行！！！ 
 
-## 画图基本用法
+## 画图基本用法 & 封装思想
+
+![image-20241108233919044](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241108233919044.png)
 
 
 
@@ -416,12 +442,33 @@ class Mypanel extends JPanel {
 // Mypanel.java
 package TankGame;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.*;
 import javax.swing.*;
 // 决定画什么内容
-public class Mypanel extends JPanel {
+public class Mypanel extends JPanel implements KeyListener{
+    // 实现键盘事件监听接口 --> 重写其方法（规范性）
     Hero hero = null;// 定义坦克
+    Vector<enemyTank> enemyTanks = new Vector<>();
+    // 创建一个集合
+    int enemyTankSize = (int)(10*(Math.random()));
+
+    //变量 默认是包访问权限
     public Mypanel() {
-        hero = new Hero(100,100); // 初始化坦克对象
+        hero = new Hero(100,100);
+        // 初始化坦克对象
+        hero.setDirection(2);
+        // 没有必要封装到hero里 , 直接调用方法改变/获取值
+        for(int i=0;i<enemyTankSize;i++)
+        {
+            enemyTank e = new enemyTank(100*(i+1),0);
+            e.setDirection((int)(Math.random()*4));// 随机方向
+            enemyTanks.add(e);
+
+        } // 初始化坦克集合2
+
 
     }
     // 将画坦克封装为一个方法
@@ -429,20 +476,38 @@ public class Mypanel extends JPanel {
     public void drawTank(int x, int y, int direction, Graphics g, int bloc) {
         if( bloc == 0) {
             g.setColor(Color.green);
-        }
-        else {
+        } else {
             g.setColor(Color.red);
         }
         switch (direction) {
-            case 0:
-                g.fill3DRect(x,y,10,60,false);
-                g.fill3DRect(x+30,y,10,60,false);
-                g.fill3DRect(x+10,y+10,20,40,false);
-                g.fillOval(x+10,y+20,20,20);
-                g.drawLine(x+20,y+30,x+20,y);
+            case 0: // 向上
+                g.fill3DRect(x, y, 10, 60, false); // 左
+                g.fill3DRect(x + 30, y, 10, 60, false); // 右
+                g.fill3DRect(x + 10, y + 10, 20, 40, false); // 中间
+                g.fillOval(x + 10, y + 20, 20, 20); // 圆盖
+                g.drawLine(x + 20, y + 30, x + 20, y); // 炮筒
                 break;
-            default:
-                System.out.println("暂时没有处理");
+            case 1: // 向右
+                g.fill3DRect(x, y, 60, 10, false); // 上
+                g.fill3DRect(x, y + 30, 60, 10, false); // 下
+                g.fill3DRect(x + 10, y + 10, 40, 20, false); // 中间
+                g.fillOval(x + 20, y + 10, 20, 20); // 圆盖
+                g.drawLine(x + 30, y + 20, x + 60, y + 20); // 炮筒
+                break;
+            case 2: // 向下
+                g.fill3DRect(x, y, 10, 60, false); // 左
+                g.fill3DRect(x + 30, y, 10, 60, false); // 右
+                g.fill3DRect(x + 10, y + 10, 20, 40, false); // 中间
+                g.fillOval(x + 10, y + 20, 20, 20); // 圆盖
+                g.drawLine(x + 20, y + 30, x + 20, y + 60); // 炮筒
+                break;
+            case 3: // 向左
+                g.fill3DRect(x, y, 60, 10, false); // 上
+                g.fill3DRect(x, y + 30, 60, 10, false); // 下
+                g.fill3DRect(x + 10, y + 10, 40, 20, false); // 中间
+                g.fillOval(x + 20, y + 10, 20, 20); // 圆盖
+                g.drawLine(x + 30, y + 20, x, y + 20); // 炮筒
+                break;
         }
 
 
@@ -452,20 +517,54 @@ public class Mypanel extends JPanel {
     public void paint(Graphics g) {
         super.paint(g);
         g.fillRect(0,0,1000,750); // 对于画板(面板)界面：填充矩形 颜色默认为黑色
-        drawTank(hero.getX(),hero.getY(),0, g,0);
-        drawTank(hero.getX(),hero.getY()+100,0, g,1);
+        drawTank(hero.getX(),hero.getY(),hero.getDirection(), g,0);
+        for(int i=0;i<enemyTankSize;i++)
+        {
+            enemyTank e = enemyTanks.get(i);
+            // 集合方法
+            drawTank(e.getX(),e.getY(),e.getDirection(),g,1);
+        }
+        // 把绘画部分封装成一个方法后调用即可
         // 注意·传递的参数
+    }
 
+    @Override
+    public void keyTyped(KeyEvent e) {
 
+    }
 
-//        g.setColor(Color.white);
-//        g.setFont(new Font("Times New Roman",Font.BOLD,50));
-//        g.drawString("Game Over",350,100);
-// paint 方法会自动执行
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+        if((char)e.getKeyCode() == 'W') {
+            hero.setDirection(0);
+            hero.moveUp();
+            // 继承了tank 就可以直接使用tank的方法了
+        }
+        if((char)e.getKeyCode() == 'D') {
+            hero.setDirection(1);
+            hero.moveRight();
+
+        }
+         if((char)e.getKeyCode() == 'S') {
+             hero.setDirection(2);
+             hero.moveDown();
+       }
+        if((char)e.getKeyCode() == 'A') {
+            hero.setDirection(3);
+            hero.moveLeft();
+
+        }
+
+        this.repaint();
+        // 重绘
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
 
     }
 }
-
 ~~~
 
 ~~~java
@@ -494,7 +593,144 @@ public class Round01 extends JFrame {
 
 ~~~
 
+## 继承 特性（Tank -->Hero）
 
+**当一个类继承了另一个类时，子类会自动获得父类的所有字段（属性）和方法，尽管子类可以选择覆盖（override）父类的方法来提供自己的实现**
+
+
+
+
+
+## java 事件处理机制
+
+![image-20241109100416434](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109100416434.png)
+
+![image-20241109100420764](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109100420764.png)
+
+![image-20241109100533341](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109100533341.png)
+
+# XML
+
+![image-20241109180028172](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109180028172.png)
+
+![image-20241109180031729](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109180031729.png)
+
+# 网络编程
+
+本质： 就是计算机通过网络进行数据传输
+
+![image-20241109175613478](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109175613478.png)
+
+BS/CS 架构  （browser server/ client server）
+
+**网页游戏画质稀烂 why 资源不是在本地 而是要服务器传输** 
+
+## 网络编程三要素
+
+​	ip：（接收数据的通信设备地址）
+
+端口号：一个端口号只能被一个软件绑定使用（接收数据的软件）
+
+网络传输的规则（协议）
+
+![image-20241109230101148](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109230101148.png)
+
+![image-20241109230421868](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109230421868.png)
+
+![image-20241109231833818](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109231833818.png)
+
+![image-20241109232124413](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109232124413.png)
+
+**128位分成八组**
+
+## 局域网和公网
+
+~~~tex
+192.168开头的IP地址是私有IP地址范围中最常见的一类。具体来说：
+
+1. 地址范围：
+   192.168.0.0 到 192.168.255.255
+2. 子网掩码：
+   255.255.0.0 （也写作 /16 in CIDR notation）
+3. 分类：
+   这属于C类私有地址范围
+4. 可用IP数量：
+   65,536个（2^16）
+5. 常见用途：
+   - 家庭网络
+   - 小型办公室网络
+   - 无线路由器默认设置
+   - 虚拟机网络
+6. 特点：
+   - 不可直接在互联网上路由
+   - 可在不同的局域网中重复使用
+   - 需要通过NAT（网络地址转换）才能访问互联网
+7. 配置示例：
+   - 路由器IP：192.168.1.1
+   - DHCP范围：192.168.1.2 到 192.168.1.254
+8. 安全性：
+   提供了一定程度的网络隔离，因为这些地址不能直接从互联网访问
+9. 标准：
+   定义在RFC 1918中
+10. 其他常见配置：
+    - 192.168.0.x
+    - 192.168.1.x
+    - 192.168.2.x 等
+
+这个地址范围非常流行，因为它提供了足够多的地址用于大多数小型到中型网络，同时又易于记忆和配置。然而，在大型企业网络中，可能会选择使用10.0.0.0/8范围，因为它提供了更多的地址空间。
+
+// 重要提示：虽然192.168.x.x地址在不同的局域网中可以重复使用，但在同一个网络中，每个设备的IP地址必须是唯一的。
+~~~
+
+
+
+## 特殊IP地址
+
+​	![image-20241109235358709](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109235358709.png)
+
+**不同的局域网下ip地址不一样**
+
+而127.0.0.1 一定是本机ip
+
+
+
+## 公网  外网 广域网  内网 局域网
+
+
+
+```HTML
+公网就是 互联网
+内外网只是一个相对概念 
+广域网 局域网 
+广域网是大型的局域网
+```
+
+ ![da3812272922ce6f6af0cf6d94df339](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/da3812272922ce6f6af0cf6d94df339.jpg)
+
+![](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/da3812272922ce6f6af0cf6d94df339.jpg)
+
+
+
+## InetAdress 类
+
+~~~java
+package com.Senjay;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException; // 要抛出异常
+public class InetAdressDemo1 {
+    public static void main(String[] args) throws UnknownHostException {
+        InetAddress addr =InetAddress.getByName("senjay");
+   //   InetAddress addr =InetAddress.getByName("192.168.0.9");
+        System.out.println(addr);
+        ------------------------------------------------
+        System.out.println(addr.getHostAddress());
+        System.out.println(addr.getHostName());
+
+    }
+}
+
+~~~
 
 
 
@@ -651,9 +887,254 @@ RetentionPolicy:
 
 
 
-# springboot web( p{ springboot } )
+---
 
 
+
+# ==springboot web( p{ springboot } )==
+
+## 浏览器打开程序
+
+访问 `http://localhost:8080` 和在浏览器中打开一个以 `file://` 开头的本地 HTML 文件有几个关键区别，主要涉及到它们的运行环境和交互方式：
+
+### 1. 运行环境
+
+- **`http://localhost:8080`**:
+  - **服务器环境**：这是通过一个在本地运行的 Web 服务器（如 Spring Boot 应用、Node.js 服务、Apache、Nginx 等）提供的访问地址。
+  - **动态内容**：服务器可以处理动态请求，生成动态内容，处理后端逻辑和数据库交互。每次请求都可以返回不同的内容或数据。
+  - **网络协议**：使用 HTTP 协议进行通信，支持各种 HTTP 方法（GET、POST、PUT、DELETE 等），并可以设置 HTTP 头、状态码和其他网络信息。
+- **`file://` 协议**:
+  - **本地文件系统**：直接从本地磁盘读取文件，不涉及任何服务器。
+  - **静态内容**：只能提供静态 HTML、CSS、JS 文件。无法处理服务器端逻辑，也不能直接与数据库交互。
+  - **协议限制**：受限于浏览器的安全策略，某些功能（如 AJAX 请求）可能受到限制，因为浏览器通常不允许从 `file://` 协议发起跨域请求。
+
+### 2. 功能和灵活性
+
+- **动态与交互能力**：
+  - 使用 `http://localhost:8080`，你可以构建和测试完整的 Web 应用程序，包括表单处理、用户认证、数据存储、业务逻辑等复杂功能。
+  - 本地文件访问通常用于查看静态 HTML 页面，仅支持基本的客户端功能（如 JavaScript 动画、简单的用户交互）。
+- **开发和调试**：
+  - 通过服务器地址运行的应用可以利用开发工具进行更复杂的调试和测试，如查看后端日志、监控 HTTP 请求/响应、模拟不同网络条件等。
+  - 本地 HTML 文件调试主要限于前端部分，不能测试后端逻辑。
+
+### 3. 示例应用场景
+
+- **`http://localhost:8080`**：用于开发和测试完整的 Web 应用程序，在本地运行和调试服务器端代码。
+- **`file://`**：通常用于查看静态网页文件，如打开一个简单的 HTML 文档，或在没有 Web 服务器的情况下查看本地存储的网页。
+
+---
+
+
+
+## project 和 module
+
+### Project
+
+- **概念**：一个 Project 是一个顶级的容器，代表一个完整的开发工作空间。它可以包含多个模块、配置文件、项目设置、库、和其他项目相关的文件。
+
+- **用途**：Project 通常对应一个完整的应用程序或系统。它可以包括所有与该应用程序相关的代码、资源、配置、和依赖。
+
+- 特点
+
+  ：
+
+  - 可以包含多个模块，每个模块可以有不同的配置和依赖。
+  - 配置文件如 `*.iml`、`workspace.xml` 保存在 `.idea` 目录中。
+  - 适用于管理大型应用程序或多个相关应用程序。
+
+### Module
+
+- **概念**：一个 Module 是 Project 的一个子单元，代表一个自包含的代码集及其配置。它包含源代码、资源文件、模块特定的配置和依赖项。
+
+- **用途**：模块通常用于分解大型项目，将项目的不同部分独立出来，便于管理、编译和测试。例如，一个模块可以是一个 Java 库、一个 Web 应用程序、一个服务等。
+
+- 特点
+
+  ：
+
+  - 每个模块可以有自己的 SDK 设置、依赖项、编译输出路径。
+  - 支持不同类型的模块，如 Java 模块、Maven 模块、Gradle 模块等。
+  - 有自己的配置文件（如 `module.iml`）来定义模块的设置。
+
+### 区别
+
+1. **层级结构**：Project 是顶级容器，包含多个模块。模块是 Project 的组成部分。
+2. **独立性**：模块可以独立编译和运行，有自己的依赖和设置。Project 统一管理所有模块的全局设置和共享资源。
+3. **用途**：Project 用于管理整个开发工作空间，而模块用于组织代码结构和配置，以支持更复杂的项目拆分和依赖管理。
+
+---
+
+## 创建
+
+创建springboot项目 
+
+注意springboot现在不支持jdk1.8了
+
+所以要在server URL 中修改为阿里云镜像
+
+![image-20241109170551143](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109170551143.png)
+
+1. **Java 版本**：这是指 Java 平台和语言的版本，例如 **Java 8、Java 11、Java 17** 等。这些版本标志着 Java 语言及其标准库的特性和功能集。这些版本的发布通常伴随新的语言特性、API 增强、性能改进和安全修复。
+2. **JDK 版本**：JDK（Java Development Kit）是用来开发和运行 Java **应用程序的工具包**。JDK 包含了 JRE（Java Runtime Environment）、编译器（javac）、调试工具、以及其他开发所需的工具。J**DK 版本号通常与 Java 版本号一致**，例如 JDK 8 对应 Java 8，JDK 11 对应 Java 11。
+
+![image-20241109153915617](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109153915617.png)
+
+1. **项目的基本信息**：
+   - **Group**：项目的组织名称，通常是你的公司或团队的域名反转形式（例如 `com.example`）。
+   - **Artifact**：项目名称，例如 `demo`。
+   - **Type**：选择项目**打包类型**，通常选择 `Maven` 或 `Gradle`。
+   - **Language**：选择项目语言，通常选择 `Java`。
+   - **Spring Boot Version**：选择合适的 Spring Boot 版本，通常选择最新的稳定版本。
+
+然后选择依赖项
+
+[link to maven ]() 和maven有什么联系
+
+~~~java
+demo/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com.senjay(group)
+│   │   │       └── DemoApplication.java  // 主启动类
+│   │   ├── resources/
+│   │   │   ├── static/                   // 静态资源文件夹（如HTML、CSS、JS）
+│   │   │   ├── templates/                // 模板文件夹（如Thymeleaf、Freemarker）
+│   │   │   ├── application.properties    // 应用配置文件
+│   │   │   └── application.yml           // 可选的YAML格式的配置文件
+│   └── test/
+│       ├── java/
+│       │   └── com/example/demo/
+│       │       └── DemoApplicationTests.java  // 自动生成的测试类
+├── .gitignore                             // Git忽略文件
+├── HELP.md                                // 帮助文件
+├── mvnw                                   // Maven wrapper的执行脚本 (Unix)
+├── mvnw.cmd                               // Maven wrapper的执行脚本 (Windows)
+├── pom.xml                                // Maven构建文件
+└── README.md                              // 项目说明文件
+~~~
+
+
+
+![image-20241109153427932](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109153427932.png)
+
+自带一个入口类 运行入口类启动项目 
+
+
+
+## idea 快捷键
+
+ **更改热键 ： ${}**  
+
+~~~tex
+1.查看类或者接口下的继承关系：ctrl + h，查看类下的所有方法：alt + 7，或者ctrl + f12。
+
+2.生成构造、toString等方法：alt + insert  / alt + fn + insert
+
+3.快速交换两行代码：CTRL + shitf + up/down
+
+4.查找所以类或者接口：CTRL + n/双击shift
+
+5.按住alt键+鼠标左键   或者鼠标滚轮  ： 可以整一列操作数据。	
+
+6.CTRL + d:     将上一行语句复制一份到下一行。
+
+7.ctrl + alt + L ：自动格式化代码
+
+8. 100.fori    : 快速生成 i < 100的 for循环语句。遍历数组用数组名.fori。遍历字符串字符串名.length().fori。forr是倒着遍历。选中内容.sout可以将其输出
+
+9.ctrl + alt + v \ alt + 回车 ：自动生成左边
+
+10.ctrl + p ： 查看函数参数
+
+11. CTRL + alt + m ： 自动抽取方法
+
+12. shift + f6 ：批量更改相同名字的变量、方法、类等。
+
+13.ctrl + alt + t ：对选中内容加while、if 等包裹起来。
+
+14.ctrl + shitf + u : 将选中内容变成大写（upper），再次按下将变回小写。
+
+15.ctrl + alt + 左键 ： 进入方法后退出（回到原来的位置）
+
+16.选择内容 ctrl + r ：然后在输入新的内容可以一键替换
+
+17.ctrl + b 跟进，等同ctrl + 左键     ，ctrl + alt +  左键  ： 回退上一步查看（ctrl + alt + f7也行）
+
+18. Ctrl + shift + R ，搜索所有位置内容，可以进行替换。
+
+19.shift + f6 ,选中文件后按这个就可以进行重命名操作。
+
+20.ctrl + shift + alt + u：选中类后按下，展示继承结构图。
+
+21.shift + f4 打开独立小窗口
+
+22. ${alt+r} rename
+
+23. ${generate} ctrl + , 
+24. ${run} alt + p(play)
+~~~
+
+
+
+# HTTP协议
+
+## 特点： 
+
+![image-20241109172609983](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109172609983.png)
+
+~~~tex
+HTTP协议的无状态（Stateless）是指服务器不会保存客户端的任何信息，每次请求都是独立和分离的。让我详细解释一下：
+
+1. 无状态的含义：
+
+- 每次请求都是独立的，互不关联
+- 服务器不会记住之前的请求信息
+- 每次请求都需要携带必要的信息
+
+2. 无状态的优点：
+
+- 服务器不需要存储客户端信息，减少服务器开销
+- 服务器可以更快地处理大量请求
+- 更容易实现服务器的水平扩展
+
+3. 无状态带来的挑战：
+
+- 难以实现用户登录状态的保持
+- 购物车等功能实现较复杂
+- 需要重复传输一些相同的信息
+
+4. 解决方案：
+
+- Cookie：在客户端保存状态信息
+- Session：在服务器端保存状态信息
+- Token：使用令牌机制维护状态
+- LocalStorage：在浏览器本地存储数据
+~~~
+
+##  HTTP ——请求数据
+
+![image-20241109173542257](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109173542257.png)
+
+![image-20241109173551884](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109173551884.png)
+
+![image-20241109173905741](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109173905741.png)
+
+## HTTP ——响应数据
+
+![image-20241109174613471](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109174613471.png)
+
+![image-20241109174616983](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109174616983.png)
+
+![image-20241109174631636](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109174631636.png)
+
+**就是资源放在服务器的不同位置上或是另一台服务器上 所以要重定向找到资源**
+
+## 响应状态码
+
+
+
+![image-20241109175006354](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241109175006354.png)
 
 
 
