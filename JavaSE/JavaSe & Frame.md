@@ -721,11 +721,72 @@ import java.net.UnknownHostException; // 要抛出异常
 public class InetAdressDemo1 {
     public static void main(String[] args) throws UnknownHostException {
         InetAddress addr =InetAddress.getByName("senjay");
-   //   InetAddress addr =InetAddress.getByName("192.168.0.9");
+   //   InetAddress addr =InetAddress.getByName("192.168.0.9"); 
+        // 主机名/ip地址
+        // 先获取 InetAdress 对象
         System.out.println(addr);
         ------------------------------------------------
         System.out.println(addr.getHostAddress());
         System.out.println(addr.getHostName());
+        // 解构数据
+
+    }
+}
+
+~~~
+
+## 端口号
+
+![image-20241111182843348](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111182843348.png)
+
+## 协议
+
+**basic：**
+
+![bdb1d23f5fc9cf0569dffcf9eec898e8](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/bdb1d23f5fc9cf0569dffcf9eec898e8.png)
+
+![image-20241111182900646](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111182900646.png)
+
+**根据优势劣势划分应用场景！**
+
+![image-20241111182950599](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111182950599.png)
+
+### UDP协议
+
+==学会查看方法参数列表不要死记硬背==
+
+
+
+#### 发送数据：
+
+![image-20241111183201616](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183201616.png)
+
+![image-20241111183223003](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183223003.png)
+
+~~~java
+package com.Senjay.socketdemo;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
+public class SocketUDP_send {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket ds = new DatagramSocket();// no parameter ：send data by random port
+
+        String str="hello world!";
+        byte [] datas =new byte[1000];
+        datas = str.getBytes();
+        InetAddress address = InetAddress.getByName("192.168.101.116");
+        int port = 10086;
+        // 指定发送的地址和端口号
+        // 打包数据和发送地址
+        DatagramPacket dp = new DatagramPacket(datas, datas.length,address,port); // parameters link to cue so that show
+        // the datas we send is byte Arrays
+        ds.send(dp);
+        ds.close();
+        // clear the source
 
     }
 }
@@ -733,6 +794,205 @@ public class InetAdressDemo1 {
 ~~~
 
 
+
+#### 接收数据
+
+
+
+![image-20241111183318539](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183318539.png)
+
+![image-20241111183322055](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183322055.png)
+
+![image-20241111183324666](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183324666.png)
+
+~~~java
+package com.Senjay.socketdemo;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
+public class SocketUDP_received {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket ds = new DatagramSocket(10086);
+        byte [] temp = new byte [1024];
+        DatagramPacket dp = new DatagramPacket(temp, temp.length);
+        ds.receive(dp);
+        // 接收 将数据放入dp中
+
+        // 解构数据
+        byte [] data=dp.getData();
+        int len = dp.getLength();
+        InetAddress address = dp.getAddress();
+        int port = dp.getPort();
+
+        System.out.println("地址为"+address.getHostAddress()+"端口号为"+port+"发送了"+"<"+new String(data,0,len)+">"+"数据");
+
+
+    }
+
+}
+
+~~~
+
+```tex
+new String(data, 0, len)
+
+这是 String 类的一个构造方法，用于从字节数组创建字符串。它有三个参数：
+
+data：字节数组，这里是通过 dp.getData() 获取的数据包中的字节数据
+0：起始位置（offset），表示从字节数组的第一个位置开始读取
+len：要转换成字符串的字节长度
+
+
+
+
+
+- 如果不指定起始位置和长度，可以使用 `new String(data)` 转换整个数组
+
+- 建议在网络通信中指定字符编码，如 `new String(data, 0, len, "UTF-8")`
+
+  
+```
+
+
+
+---
+
+### UDP 的三种通信方式 （代码实现）
+
+![image-20241111191944907](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111191944907.png)
+
+#### 单播
+
+etc.....
+
+#### 组(多)播
+
+==**在send中指名发送的组名**==
+
+![image-20241111192453774](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192453774.png)
+
+==**在receive中加入指名的组中**==
+
+在接收方创建`MultiSocket `对象！
+
+##### 区别注意：
+
+**`DatagramSocket`** 是用于**点对点**的UDP通信。它可以发送/接收独立的数据包到/从指定的接收者/发送者。
+
+**`MulticastSocket`** 是用于多播UDP通信。它可以将数**据发送到一个多播组中的多个接收者**，允许多个主机同时**接收**到同一数据包。
+
+
+
+![image-20241111192514964](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192514964.png)
+
+`ms.join(InetAddress对象)`
+
+#### 广播
+
+**直接将发送的ip地址改为255.255.255.255!!**
+
+
+
+### TCP协议
+
+![image-20241111192237673](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192237673.png)
+
+#### 发送数据
+
+![image-20241111192243547](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192243547.png)
+
+~~~java
+package com.Senjay.socketdemo;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.Scanner;
+
+public class SocketTCP_send {
+    public static void main(String[] args) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        Socket socket = new Socket("192.168.101.116",10086);// 创建对象的同时来连接服务端
+        OutputStream os = socket.getOutputStream();// 获取输出流通道
+        String conversation = sc.nextLine();
+
+        os.write(conversation.getBytes());
+//        os.close(); 没有必要 因为关闭通道这个也跟着关了
+        socket.close(); // 断开连接
+
+
+    }
+}
+
+~~~
+
+
+
+
+
+#### 接收数据
+
+
+
+![image-20241111192249192](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192249192.png)
+
+~~~java
+package com.Senjay.socketdemo;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class SocketTCP_received {
+    public static void main(String[] args) throws IOException {
+        ServerSocket ss = new ServerSocket(10086); // 指名接收的端口号
+        Socket socket = ss.accept();// 监听客户端的连接 等待并接受客户端的连接请求。这个方法会阻塞，直到有客户端连接。
+        InputStream is = socket.getInputStream();
+
+        InputStreamReader isr = new InputStreamReader(is); // 将字节流转化为字符流
+        BufferedReader br = new BufferedReader(isr);
+
+        // 获取通道的输入流
+        int b;
+        while ((b = br.read()) != -1) {
+            // 对于字节流
+            // is.read() 方法从输入流中读取一个字节的数据。
+            // 如果读取成功，它返回一个 0 到 255 之间的整数，表示读取的字节值。
+            // 如果到达流的末尾，它返回 -1。
+            
+            // 对于字符流
+            // 这是一个 while 循环，它会持续执行，直到从流中读取到 EOF（End of File）标记。
+            // br.read() 方法：
+            // 从 BufferedReader 中读取一个字符。
+            // 返回值是该字符的 Unicode 编码点（一个整数），范围是 0 到 65535。
+            // 如果到达流的末尾，返回 -1。
+            
+            System.out.print((char) b); // 一个字节一个字节地获取 如果是中文的要怎么办
+        }
+//        is.close();
+        socket.close();
+    }
+}
+
+~~~
+
+
+
+#### 通信流
+
+![image-20241111192316713](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192316713.png)
+
+#### 三次握手&四次挥手
+
+![image-20241111192252760](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192252760.png)
+
+![image-20241111192256195](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111192256195.png)
 
 
 
@@ -1073,6 +1333,8 @@ demo/
 
 23. ${generate} ctrl + , 
 24. ${run} alt + p(play)
+25. alt + enter 快速纠错
+
 ~~~
 
 
