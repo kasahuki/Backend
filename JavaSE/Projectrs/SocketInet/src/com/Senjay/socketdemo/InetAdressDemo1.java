@@ -1,4 +1,4 @@
-package com.Senjay;
+package com.Senjay.socketdemo;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -177,12 +177,12 @@ alpe：**举例子都分别有什么用
 ### 实际类型 & 引用类型 
 
 ### 实际类型（Actual Type）：
-实际类型是指对象在内存中真正的类型。
+实际类型是指对象在**内存中真正的类型**。
 它是在运行时确定的，是对象实例化时使用的具体类。
 <font size=10 color=red>实际类型</font>决定了对象可以使用哪些<font size=10 color=red>方法</font>
 
 ### 引用类型（Reference Type）：
-引用类型是变量声明时使用的类型。
+引用类型是**变量声明时使用**的类型。
 它是在编译时确定的，可以是实际类型的本身，也可以是其父类或实现的接口。
 <font size=10 color=red>引用类型</font>决定了通过该引用可以访问哪些<font size=10 color=red>成员变量</font>
 
@@ -193,6 +193,14 @@ parent B = new daughters()
 **引用类型 			实际类型**
 
 **多态本质：**
+
+new 返回的是一个对象的引用
+
+返回的是一个对sons对象的引用 
+
+sons本身是自己的实际类型
+
+引用类型 =new 实际类型 （返回对象的引用）
 
 ```java
 // Animal是父类，Dog是子类
@@ -755,9 +763,9 @@ public class InetAdressDemo1 {
 
 ==学会查看方法参数列表不要死记硬背==
 
+data**gram** 数据包（**报**）
 
-
-#### 发送数据：
+####  发送数据：
 
 ![image-20241111183201616](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241111183201616.png)
 
@@ -919,7 +927,7 @@ public class SocketTCP_send {
         OutputStream os = socket.getOutputStream();// 获取输出流通道
         String conversation = sc.nextLine();
 
-        os.write(conversation.getBytes());
+        os.write(conversation.getBytes());  // 传输的数据一定要是字节文件
 //        os.close(); 没有必要 因为关闭通道这个也跟着关了
         socket.close(); // 断开连接
 
@@ -1131,6 +1139,10 @@ RetentionPolicy:
 
 # 动态代理
 
+link to [静态代理](#实现Runnable接口)
+
+
+
 
 
 
@@ -1144,6 +1156,239 @@ RetentionPolicy:
 
 
 # 多线程
+
+![image-20241112194700498](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241112194700498.png)
+
+## 继承Thread 类
+
+线程休眠 ： Thread.sleep(1000) **(ms)**
+
+**线程休眠**   指**一个正在执行的线程**在调用 `Thread.sleep(milliseconds)` 方法后，暂停执行一段时间。在这段时间内，**线程不会占用CPU资源，操作系统会将其状态设置为“休眠”，然后调度其他线程运行**。休眠的时间是由传入的参数（以毫秒为单位）决定的。
+
+注意：
+
+CPU核心数：
+
+- 如果您的机器是**单核**的，那么在任一时刻只能执行一个线程，这可能导致主线程先执行完毕。
+- 操作系统会交替执行这两个线程，具体的执行顺序和时间片分配由操作系统决定。
+
+
+
+```java
+package com.Senjay;
+
+public class MultiThreadDemo1 {
+    public static void main(String[] args) {
+        Dog cast1 = new Dog();
+        System.out.println(Runtime.getRuntime().availableProcessors()); // 16核处理器
+        cast1.start();// 开启线程 不会阻塞 
+        
+
+       // 操作系统会交替执行这两个线程，具体的执行顺序和时间片分配由操作系统决定。
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i);
+        }
+    }
+}
+class Dog extends Thread {
+    // 继承线程就表明是一个线程了
+
+    @Override
+    public void run() {
+        int cnt =0;
+        while (true) {
+            System.out.println(Thread.currentThread().getName());
+            try {
+                Thread.sleep(1000);// ms单位
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if(cnt==20){
+                break;
+            }
+        }
+
+
+    }
+}
+```
+
+为何使用start方法而不是run方法
+
+1. 使用 start() 方法：
+   - start() 方法会创建一个新的线程，并让这个线程执行 run() 方法。
+   - 这个新线程会与主线程**并行运行**。
+   - **JVM** 会调用这个**新线程的 run()** 方法。
+   - 这才是真正的多线程执行。
+2. 直接调用 run() 方法：
+   - 如果直接调用 run() 方法，它会在当前线程（通常是主线程）中执行。
+   - 不会创建新的线程。
+   - 这只是一个**普通的方法调用**，不会实现多线程。
+   - 
+
+##  实现Runnable接口
+
+​	知识点：==静态代理==
+
+link to [动态代理](#动态代理)
+
+
+```java
+package com.Senjay.threads;
+
+public class MultiThreadsDemo2 {
+    public static void main(String[] args) {
+        MyThread myThread = new MyThread();
+        Thread thread = new Thread(myThread); // 把实现了Runnable接口的mythread 对象放入thread的构造函数中
+        thread.start(); // thread 代理对象 myThread 表示被代理的对象
+        
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i);
+        }
+    }
+
+}
+class MyThread implements Runnable { // 实现接口
+    @Override
+    public void run() {
+        int cnt = 0;
+        while(true)
+        {
+            System.out.println(Thread.currentThread().getName() + "第" + ++cnt  + "次调用"  );
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+}
+```
+
+极简（不是实际）模拟静态代理的实现！！！
+
+~~~java
+// Runnable 接口（被代理的接口）
+interface Runnable {
+    void run();
+}
+
+// MyThread 类（被代理的对象）
+class MyThread implements Runnable {
+    public void run() {
+        System.out.println("MyThread is running");
+    }
+}
+
+// Thread 类（代理类）
+class Thread {
+    private Runnable target;
+
+    public Thread(Runnable target) {
+        this.target = target;
+    }
+
+    public void start() {
+        // 模拟创建新线程的过程
+        System.out.println("Thread is starting");
+        // 在新线程中调用 run 方法
+        run();
+    }
+
+    private void run() {
+        if (target != null) {
+            target.run();
+        }
+    }
+}
+
+// 客户端代码
+public class Main {
+    public static void main(String[] args) {
+        MyThread myThread = new MyThread();
+        Thread thread = new Thread(myThread);
+        thread.start();
+    }
+}
+~~~
+
+
+
+## 两个方法的优缺点和使用场景
+
+**实现Runnable 接口 方式更加适合多个线程==共享一个资源==的情况 ，并且避免了单继承的情况！**
+
+这两种情况确实有重要的区别。让我们逐一分析：
+
+**情况1：**
+
+
+
+```java
+T1 t1 = new T1();  // t1 对象实现了Runnable 接口
+Thread mythread1 = new Thread(t1);
+Thread mythread2 = new Thread(t1);
+mythread1.start();
+mythread2.start();
+```
+
+在这种情况下：
+
+1. 只创建了一个 T1 类的实例 (t1)。
+2. 两个 Thread 对象 (mythread1 和 mythread2) 共享同一个 Runnable 实例 (t1)。
+3. 两个线程会执行相同的 T1 实例的 run() 方法。
+4. 如果 T1 的 run() 方法中有任何共享状态（如实例变量），这些状态将被两个线程共享和修改。
+5. 这可能导致线程安全问题，需要适当的同步机制来处理并发访问。
+
+
+
+---
+
+
+
+**情况2：**
+
+
+
+```java
+T1 t1 = new T1();  // t1 对象实现了Runnable 接口
+T2 t2 = new T2();  // t2 对象实现了Runnable 接口
+Thread mythread1 = new Thread(t1);
+Thread mythread2 = new Thread(t2);
+mythread1.start();
+mythread2.start();
+```
+
+**在这种情况下：**
+
+1. 创建了两个不同的 Runnable 实例：t1 (T1 类型) 和 t2 (T2 类型)。
+2. 每个 Thread 对象都有自己独立的 Runnable 实例。
+3. 两个线程将执行不同的 run() 方法（一个执行 T1 的 run()，另一个执行 T2 的 run()）。
+4. 每个线程操作的是独立的对象状态，不会直接共享实例变量。
+5. 这种方式通常不会导致直接的线程安全问题（除非 T1 和 T2 访问共享的静态变量或外部资源）。
+
+主要区别：
+
+1. 代码逻辑：情况1中两个线程执行相同的代码，情况2中可能执行不同的代码。
+2. 状态共享：情况1中线程共享状态，情况2中线程有独立的状态。
+3. 线程安全：情况1更容易出现线程安全问题，情况2相对独立。
+4. 灵活性：情况2允许不同线程执行不同的任务，更加灵活。
+5. 资源使用：情况1可能更节省内存（只有一个 Runnable 对象），但需要更谨慎的并发控制。
+
+选择哪种方式取决于您的具体需求。如果需要多个线程执行相同的任务并共享状态，使用情况1。如果需要不同线程执行不同的任务，或者希望避免状态共享，使用情况2。
+
+
+
+
+
+# java API （类库）
+
+查看API文档即可
+
+link to [API文档]()
+
+
 
 
 
