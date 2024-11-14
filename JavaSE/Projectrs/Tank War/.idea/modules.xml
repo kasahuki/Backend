@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../SocketInet/SocketInet.iml" filepath="$PROJECT_DIR$/../SocketInet/SocketInet.iml" />
       <module fileurl="file://$PROJECT_DIR$/Tank War.iml" filepath="$PROJECT_DIR$/Tank War.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SocketInet/testdemo/testdemo.iml" filepath="$PROJECT_DIR$/../SocketInet/testdemo/testdemo.iml" />
     </modules>
   </component>
 </project>

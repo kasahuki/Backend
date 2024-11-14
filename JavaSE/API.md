@@ -47,9 +47,9 @@ Math类包含执行基本数字运算的方法，我们可以使用Math类完成
 我们要学习的Math的常见方法如下所示：
 
 ```java
-public static int abs(int a)					// 返回参数的绝对值
-public static double ceil(double a)				// 返回大于或等于参数的最小整数
-public static double floor(double a)			// 返回小于或等于参数的最大整数
+public static int abs(int a)					// 返回参数的绝对值 absolute 
+public static double ceil(double a)				// 返回大于或等于参数的最小整数 ceililng 
+public static double floor(double a)			// 返回小于或等于参数的最大整数 floor
 public static int round(float a)				// 按照四舍五入返回最接近参数的int类型的值
 public static int max(int a,int b)				// 获取两个int值中的较大值
 public static int min(int a,int b)				// 获取两个int值中的较小值

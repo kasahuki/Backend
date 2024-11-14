@@ -761,6 +761,8 @@ public class InetAdressDemo1 {
 
 ### UDP协议
 
+**Socket 即插座**
+
 ==学会查看方法参数列表不要死记硬背==
 
 data**gram** 数据包（**报**）
@@ -971,7 +973,7 @@ public class SocketTCP_received {
         while ((b = br.read()) != -1) {
             // 对于字节流
             // is.read() 方法从输入流中读取一个字节的数据。
-            // 如果读取成功，它返回一个 0 到 255 之间的整数，表示读取的字节值。
+            // 如果读取成功，它返回一个 0 到 255 之间的整数，表示读取的字节值（几个字节）。
             // 如果到达流的末尾，它返回 -1。
             
             // 对于字符流
@@ -990,7 +992,7 @@ public class SocketTCP_received {
 
 ~~~
 
-
+`ss.accept 用于接收一个来自客户端的连接请求，连接了就会返回一个Socket `
 
 #### 通信流
 
@@ -1010,15 +1012,15 @@ public class SocketTCP_received {
 
 ### 编译时异常（受检异常）
 
-编译时异常是在编译时由编译器强制检查的异常。程序员必须显式地处理这些异常，否则程序将无法编译。
+编译时异常是在编译时由==编译器强制检查==的异常。程序员必须==显式==地处理（两种方法）这些异常，否则程序将==无法编译==。
 
 ### 运行时异常（非受检异常）
 
- 运行时异常是在程序运行过程中可能出现的异常，编译器不强制要求程序员进行处理。这些异常通常是由程序中的逻辑错误引起的
+ 运行时异常是在程序运行过程中可能出现的异常，编译器不强制要求程序员进行处理。这些异常通常是由程序中的==逻辑错误==引起的
 
 ### 错误（error）
 
-- 错误是指应用程序无法处理的严重问题。这些通常是由运行时环境导致的，程序员不应试图捕获这些错误。：错误通常表示 JVM 的内部错误或资源耗尽，例如内存不足、栈溢出等。
+- 错误是指应用程序无法处理的严重问题。这些通常是由==运行时环境==导致的，程序员不应试图捕获这些错误。：错误通常表示 JVM 的内部错误或资源耗尽，例如==内存不足、栈溢出==等。
 
 ## 异常的处理方式：
 
@@ -1044,6 +1046,60 @@ public class SocketTCP_received {
    - 通过异常处理，程序可以在特定条件下改变正常的执行流程。虽然不建议过度使用异常来控制程序逻辑，但在某些情况下，如处理特定的错误条件时，异常是非常有用的。
 7. **防止安全漏洞**：
    - 通过正确的异常处理，可以防止程序暴露内部实现细节，从而减少安全风险。例如，防止 SQL 注入或文件路径泄露等问题。
+
+## 异常处理 
+
+~~~java
+public class ThrowingExceptions {
+    public static void checkAge(int age) throws IllegalArgumentException {
+        if (age < 0) {
+            throw new IllegalArgumentException("年龄不能为负数");
+        }
+        System.out.println("年龄是: " + age);
+    }
+
+    public static void main(String[] args) {
+        try {
+            checkAge(-5);
+        } catch (IllegalArgumentException e) {
+            System.out.println("捕获到异常: " + e.getMessage());
+        }
+    }
+}
+~~~
+
+**注意：throws和throw关键字**
+
+### 自定义异常
+
+~~~java
+class CustomException extends Exception {
+    public CustomException(String message) {
+        super(message);
+    }
+}
+
+public class CustomExceptionExample {
+    public static void validate(int number) throws CustomException {
+        if (number > 100) {
+            throw new CustomException("数字不能大于100");
+        }
+        System.out.println("数字是: " + number);
+    }
+
+    public static void main(String[] args) {
+        try {
+            validate(150);
+        } catch (CustomException e) {
+            System.out.println("捕获到自定义异常: " + e.getMessage());
+        }
+    }
+}
+~~~
+
+
+
+
 
 # 注解（结合反射才有用）
 
@@ -1151,9 +1207,55 @@ link to [静态代理](#实现Runnable接口)
 
 # I/O 流
 
+![image-20241114221323944](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114221323944.png)
 
+![image-20241114221524113](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114221524113.png)
 
+**抽象类无法实例化**
 
+**所以底层就实现了几个子类继承InputStream 以此来实现父类的方法**
+
+![image-20241114221334670](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114221334670.png)
+
+## 路径问题
+
+~~~java
+package com.Senjay.io_modules;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class IoDemo {
+    public static void main(String[] args) throws FileNotFoundException {
+        FileOutputStream fos2 = new FileOutputStream("src/com/Senjay/io_modules/test1");
+        // 在当前工程（项目）目录下 
+        // 相对路径
+        FileOutputStream fos = new FileOutputStream("D:\\桌面\\Backend\\JavaSE\\Projectrs\\SocketInet\\src\\com\\Senjay\\io_modules\\test2");
+        // 绝对路径
+        try {
+            fos.write(58);
+            fos2.write(90);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            fos.close();
+            fos2.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+}
+
+~~~
+
+**一个项目中有多个模块 每个模块都会有一个src注意**
+
+**不同模块不好使用相对路径 除非是主模块（项目文件）**
+
+**创建模块文件时注意模块路径**
 
 # 多线程
 
@@ -1382,11 +1484,335 @@ mythread2.start();
 
 
 
-# java API （类库）
+# Java API （类库）
+
+
+
+## 包装类（wrapper class）
+
+**定义：基本数据类型对应的引用数据类型**
+
+![image-20241114191405766](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114191405766.png)
+
+**为何要包装类？**
+由于集合要使用对象 ，方法传参参数大都是对象
+
+char （2字节 in java） -- Character
+
+int -- Integer
+
+byte - Byte (其余与此同)
+
+~~~java
+package com.Senjay.basicAPI;
+
+public class WrapperClass {
+    public static void main(String [] args) {
+        {
+            Integer a = new Integer(120);// 过时
+            Integer c = new Integer(120);
+            System.out.println(a==c ); // false
+            // 双等号 比较地址
+        }
+        {
+            Integer a = Integer.valueOf(127);
+            Integer c = Integer.valueOf(127);/// 写这个或者自动装箱
+            System.out.println(a==c ); // true
+        }
+        // -128 ~ 127 缓存（底层提前把这些范围的数的已经创建了对象，其他的 就是相当于new出来一个新的）
+        {
+            Integer a = Integer.valueOf(527);
+            Integer c = Integer.valueOf(527);
+            System.out.println(a==c ); // false
+            
+        }
+    }
+}
+
+~~~
+
+Integer 的equals 方法已经内置封装好了
+
+###  Integer 的自动装/拆箱
+
+~~~java
+package com.Senjay.basicAPI;
+
+import java.util.Scanner;
+
+public class WrapperClass {
+    public static void main(String [] args) {
+        Scanner sc = new Scanner(System.in);
+        {
+            Integer i =10; // 自动装箱       // 底层使用valueof方法  Intefer.valueof(10)
+            int copy_i=i; // 自动拆箱  // 底层解构
+        }
+        ————————————————————————————————————————————————————————————————————————————————————————
+
+      String b = Integer.toBinaryString(25);// 返回字符串
+        System.out.println(b);
+      String o = Integer.toOctalString(25);
+        System.out.println(o);
+      String h = Integer.toHexString(25);
+        System.out.println(h);
+        {
+            int i = Integer.parseInt("59482"); // 解析
+            System.out.println(i);
+        }
+        // 8种包装类中，除了character 中都有parsexxx方法！！！
+        {
+            String s =  sc.nextLine(); // 遇到回车后停止
+            System.out.println(s);
+        }
+
+    }
+}
+
+~~~
+
+
+
+
+
+
+
+
+
+
+
+---
+
+
+
+## Arrays
+
+现用现查
+
+## String 
+
+![image-20241114214054606](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114214054606.png)
+
+
 
 查看API文档即可
 
-link to [API文档]()
+link to [API文档](https://github.com/kasahuki/Backend/blob/main/JavaSE/API.md)
+
+
+
+## System 类
+
+### exit
+
+
+
+~~~java
+package com.Senjay.basicAPI;
+
+public class SystemTest {
+    public static void main(String[] args)
+    {
+//        System.exit(0); 表示当前JVM虚拟机是正常停止
+
+        // 参数：status（状态码）
+        System.exit(1);
+        // System.exit(1);
+        //System.exit(1); 语句在 Java 程序中用于终止 Java 虚拟机（JVM），
+        //并且返回一个状态码给操作系统。这个状态码帮助操作系统和其他程序判断程序的退出状态。
+        // 状态码1通常表示程序是由于某种错误或异常情况而非正常结束。
+        System.out.println("Hello World");
+
+    }
+
+}
+~~~
+
+### currentTimeMillis
+
+~~~java
+package com.Senjay.basicAPI;
+
+import java.util.*;
+
+public class Time {
+    public static  void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        long time_start = System.currentTimeMillis();
+        int n = sc.nextInt();
+        for(int i=2;i*i<=n;i++) // 注意如果不写方法里的话3 这个情况就没有考虑到了 return 的特性
+        {
+            if(n%i==0)
+            {
+                System.out.println("false");
+                break;
+            }
+            System.out.println("True");
+
+        }
+        long time_end = System.currentTimeMillis();
+        System.out.println(time_end - time_start);
+
+//        long time1 = System.currentTimeMillis();
+//        for(int i=0;i<1000;i++)
+//        {
+//            int cnt = 0;
+//            cnt++;
+//        }
+//        long time2 = System.currentTimeMillis();
+//        System.out.println(time2 - time1);
+    }
+}
+
+~~~
+
+
+
+### arraycopy （拷贝数组）
+
+~~~java
+package com.Senjay.basicAPI;
+
+public class ArrayCopy {
+    public static void main(String[] args) {
+        int arr[] = {1,5,8,9,8,4,6,5,7,7,2}; // length:11
+        int copy_arr[] = new int[10];
+        System.arraycopy(arr,1,copy_arr,2,arr.length-3);
+                        //  数据源 数据源索引  数据承受者  数据目的地索引 拷贝个数
+        // -----------------------------------------------------------------------------
+//        System.out.println(copy_arr);
+        for(int i=0;i<copy_arr.length;i++)
+            System.out.print(copy_arr[i]);
+        // Java 中数组是一个对象
+        // 所以具有很多方法 现用现查即可
+
+
+    }
+}
+~~~
+
+### Runtime
+
+**Runtime类主要与Java程序的运行时环境有关。它提供了与程序运行时环境交互的方法，包括 内存管理、系统属性访问、执行外部程序**(shell命令)
+
+![image-20241114170256358](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241114170256358.png)
+
+~~~java
+package com.Senjay.basicAPI;
+
+import java.io.IOException;
+
+public class RuntimeDemo {
+    public static void main(String[] args) throws IOException {
+       Runtime r1 = Runtime.getRuntime();
+       // 首先先创建Runtime 对象
+        // Runtime 方法
+        System.out.println(r1.availableProcessors());
+        // 打印cpu核心数
+        // 有关JVM的内存
+        System.out.println(r1.freeMemory() );// 剩余可用
+        System.out.println(r1.totalMemory());// 表示JVM当前实际向操作系统申请的内存量
+        // 这是实际分配的内存，会随程序需求动态变化
+        System.out.println(r1.maxMemory()); // 表示JVM能够使用的最大内存上限 固定值
+        System.out.println(r1);
+//        r1.exec("notepad");
+        // 还可执行 shell指令 // 可用来延时关机类似的功能
+
+
+
+    }
+}
+
+~~~
+
+
+
+## Object
+
+==顶级父类== 只有**无参构造方法**
+
+对于**System.out.println**    ==打印== 会默认调用对象的**toString**方法！！！
+
+**由于子类使用方法时会先找自身有无，没有就像上（父类中）查找**
+
+![47080478a8620c0f8e383cfd86139b2](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/47080478a8620c0f8e383cfd86139b2.jpg)
+
+**方法调用者不可为null**
+
+**equals (obj (要先做非空判断) 	isNull（obj） nonNull（...）**
+
+```tex
+默认的equals比较（从Object类继承）
+
+public class Object {
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+}
+默认比较对象的引用（内存地址）
+等同于使用 == 运算符
+```
+
+==重写==
+
+~~~java
+public class Person {
+    private String name;
+    private int age;
+    
+    @Override
+    public boolean equals(Object obj) {
+        // 1. 判断是否是同一个对象（地址相同就是同一个）
+        if (this == obj) return true;
+        
+        // 2. 判断是否为null
+        if (obj == null) return false;
+        
+        // 3. 判断是否是同一个 类
+        if (getClass() != obj.getClass()) return false;
+         // 隐式调用 
+        // 显式调用 this.getClass()
+         
+        // 4. 类型转换
+        Person other = (Person) obj; // 注意要强转
+        
+        // 5. 比较属性值  （核心）
+        return age == other.age && 
+               Objects.equals(name, other.name);
+    }
+}
+~~~
+
+**静态方法是属于类而不是特定对象的方法**
+
+# Pattern & Matcher （regex 正则）
+
+~~~java
+package com.Senjay.basicAPI;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class PatternDemo {
+    public static void main(String[] args) {
+        Pattern p = Pattern.compile("adsf");
+        Matcher m = p.matcher("adsf45sadsfd");
+        while (m.find()) {
+//            System.out.println(m.group(0));表示匹配内容 
+            // 里头参数 表示捕获组 0 就表示全部捕获 i：第i个捕获组 
+            System.out.println(m.start() + " " + m.end());
+        }
+    }
+}
+
+~~~
+
+**拓展：可以去 爬 一 定格式（模板）的资源**
+
+
+
+
+
+## BigInteger
 
 
 
@@ -1544,7 +1970,7 @@ demo/
 
 6.CTRL + d:     将上一行语句复制一份到下一行。
 
-7.ctrl + alt + L ：自动格式化代码
+7.ctrl + alt + L ：自动格式化代码   CTRL  + L 查找替换
 
 8. 100.fori    : 快速生成 i < 100的 for循环语句。遍历数组用数组名.fori。遍历字符串字符串名.length().fori。forr是倒着遍历。选中内容.sout可以将其输出
 
@@ -1580,6 +2006,7 @@ demo/
 24. ${run} alt + p(play)
 25. alt + enter 快速纠错
 
+26. alt + 1 打开项目栏界面
 ~~~
 
 
