@@ -1,5 +1,17 @@
 <center><font size=30 color=red>SQL</font></center>
 
+# mysql启动
+
+注意cmd 和powershell 中命令可能不一样
+
+
+
+net stop/start MySQL80  ==(sql服务名)==
+
+查询sql状态： sc query MySQL80（服务名）
+
+或者win + R 打开 services.msc 服务程序查看各种服务的状态
+
 *![image-20241001221437368](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241001221437368.png)*
 
 **Schema在数据库中起到核心作用，它是数据库的结构和设计的蓝图，定义了数据库中表的构成、数据字段、数据类型、索引、主键、外键、视图、存储过程以及触发器等元素。**
