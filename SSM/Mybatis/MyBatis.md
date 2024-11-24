@@ -111,47 +111,139 @@ version：依赖的版本号。例如 8.0.34。-->
 </dependencies>
 ```
 ~~~
-## 创建MyBatis的核心配置文件
+## 创建MyBatis的==核心配置文件==
 >习惯上命名为`mybatis-config.xml`，这个文件名仅仅只是建议，并非强制要求。将来整合Spring之后，这个配置文件可以省略，所以大家操作时可以直接复制、粘贴。
 >核心配置文件主要用于配置连接数据库的环境以及MyBatis的全局配置信息
 >核心配置文件存放的位置是src/main/resources目录下
 ```xml
-<?xml version="1.0" encoding="UTF-8" ?>  
-<!DOCTYPE configuration  
-PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  
-"http://mybatis.org/dtd/mybatis-3-config.dtd">  
-<configuration>  
-	<!--设置连接数据库的环境-->  
-	<environments default="development">  
-		<environment id="development">  
-			<transactionManager type="JDBC"/>  
-			<dataSource type="POOLED">  
-				<property name="driver" value="com.mysql.cj.jdbc.Driver"/>  
-				<property name="url" value="jdbc:mysql://localhost:3306/MyBatis"/>  
-				<property name="username" value="root"/>  
-				<property name="password" value="123456"/>  
-			</dataSource>  
-		</environment>  
-	</environments>  
-	<!--引入映射文件-->  
-	<mappers>  
-		<mapper resource="mappers/UserMapper.xml"/>  
-	</mappers>  
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!-- 配置 连接数据库的环境-->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/test"/>
+<!--                数据库名-->
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+<!--    引入映射文件-->
+<!--     mapper 映射器-->
+    <mappers>
+        <mapper resource="mappers/UserMapper.xml"/>
+        
+    </mappers>
 </configuration>
 ```
+## 创建实体类
+
+~~~java
+package com.senjay.Mybatis.pojo;public class User {
+    // 创建实体类
+    private int id;
+    private String name;
+    private int age;
+    // 要有顺序之分吗！
+    private char gender;
+
+    public User(int age, int id, String name, char gender) {
+        this.age = age;
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+    }
+
+    public User() {
+    }
+    // 设置无参和有参构造
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public char getGender() {
+        return gender;
+    }
+
+    public void setGender(char gender) {
+        this.gender = gender;
+    }
+//   设置get和set方法
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                ", gender=" + gender +
+                '}';
+    }
+    // 重写toString方法
+    // 作用: 打印对象时, 输出对象的属性值
+
+}
+
+~~~
+
+
+
 ## 创建mapper接口
+
 >MyBatis中的mapper接口相当于以前的dao。但是区别在于，mapper仅仅是接口，我们不需要提供实现类
 ```java
-package com.atguigu.mybatis.mapper;  
-  
-public interface UserMapper {  
-	/**  
-	* 添加用户信息  
-	*/  
-	int insertUser();  
+package com.senjay.Mybatis.mapper;
+
+import com.senjay.Mybatis.pojo.User;
+
+public interface UserMapper {
+    int insertUser();
 }
+
 ```
-## 创建MyBatis的映射文件
+## 创建MyBatis的==映射文件==
+
+创建实体类 mapper接口 创建mapper的映射文件
+
+mapper映射文件要和mapper接口文件名一样
+
+**因为要为mapper映射文件和mapper接口创建==映射==！！**
+
+
+
+![image-20241124141654916](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241124141654916.png)
+
+![	](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241124141658010.png)
+
+
+
 - 相关概念：ORM（Object Relationship Mapping）对象关系映射。  
 	- 对象：Java的实体类对象  
 	- 关系：关系型数据库  
@@ -188,6 +280,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 - SqlSession：代表Java程序和数据库之间的会话。（HttpSession是Java程序和浏览器之间的会话）
 - SqlSessionFactory：是“生产”SqlSession的“工厂”
 - 工厂模式：如果创建某一个对象，使用的过程基本固定，那么我们就可以把创建这个对象的相关代码封装到一个“工厂类”中，以后都使用这个工厂类来“生产”我们需要的对象
+
+**(设计模式)**
+
 ```java
 public class UserMapperTest {
     @Test
@@ -202,7 +297,7 @@ public class UserMapperTest {
         //SqlSession sqlSession = sqlSessionFactory.openSession();
 	    //创建SqlSession对象，此时通过SqlSession对象所操作的sql都会自动提交  
 		SqlSession sqlSession = sqlSessionFactory.openSession(true);
-        //通过代理模式创建UserMapper接口的代理实现类对象
+        //通过代理模式创建UserMapper接口的代理 实现类对象(实现这个接口（UserMapper）的类的实例化对象)
         UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
         //调用UserMapper接口中的方法，就可以根据UserMapper的全类名匹配元素文件，通过调用的方法名匹配映射文件中的SQL标签，并执行标签中的SQL语句
         int result = userMapper.insertUser();
@@ -212,7 +307,9 @@ public class UserMapperTest {
     }
 }
 ```
-- 此时需要手动提交事务，如果要自动提交事务，则在获取sqlSession对象时，使用`SqlSession sqlSession = sqlSessionFactory.openSession(true);`，传入一个Boolean类型的参数，值为true，这样就可以自动提交
+- **事务部分详见：mysql**
+- 此时需要==手动提交事务==，如果要自动提交事务，则在获取sqlSession对象时，使用`SqlSession sqlSession = sqlSessionFactory.openSession(true);`，传入一个Boolean类型的参数，值为true，这样就可以自动提交
+- ![image-20241124154232891](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241124154232891.png)
 ## 加入log4j日志功能
 1. 加入依赖
 	```xml
@@ -335,6 +432,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 # 默认的类型别名
 ![](Resources/默认的类型别名1.png)
 ![](Resources/默认的类型别名2.png)
+
 # MyBatis的增删改查
 1. 添加
 	```xml

@@ -281,6 +281,117 @@ public class MusicSystem {
 }
 ~~~
 
+在 Java 中，将实现了某个接口的对象赋值给该接口类型的变量，是 **面向对象编程**中 **多态性**（Polymorphism）的一个体现。简单来说，就是你可以通过接口类型的引用来操作实现该接口的对象，而不必关心对象的具体实现细节。
+
+### 实现类赋值给接口の详细解释：
+
+#### 1. **接口和实现类的关系**：
+
+- **接口**（Interface）在 Java 中定义了一组方法，这些方法是没有具体实现的。接口是行为的抽象，定义了实现类必须遵守的契约（规则）。
+- **实现类**（Implementing Class）是接口的具体实现，必须实现接口中定义的所有方法。
+
+#### 2. **接口类型的变量可以指向实现类的对象**：
+
+当一个类实现了某个接口时，我们可以将这个类的对象赋值给该接口类型的变量。这样做的好处是，代码变得更加灵活，因为你可以针对接口编程，而不必依赖某个具体的实现类。
+
+#### 例子：
+
+假设有一个接口 `Animal` 和两个实现类 `Dog` 和 `Cat`：
+
+
+
+```java
+public interface Animal {
+    void sound();
+}
+
+public class Dog implements Animal {
+    @Override
+    public void sound() {
+        System.out.println("Woof");
+    }
+}
+
+public class Cat implements Animal {
+    @Override
+    public void sound() {
+        System.out.println("Meow");
+    }
+}
+```
+
+我们可以将 `Dog` 和 `Cat` 的对象赋值给 `Animal` 接口类型的变量：
+
+
+
+```java
+Animal myDog = new Dog();  // myDog 是 Animal 类型的引用，指向了 Dog 对象
+Animal myCat = new Cat();  // myCat 是 Animal 类型的引用，指向了 Cat 对象
+```
+
+#### 3. **多态性**：
+
+多态性允许我们通过接口的引用来调用实现类中的方法，且具体调用哪个实现类的方法是在运行时决定的。比如：
+
+
+
+```java
+myDog.sound();  // 输出 "Woof"
+myCat.sound();  // 输出 "Meow"
+```
+
+在这段代码中，虽然 `myDog` 和 `myCat` 的类型都是 `Animal`，但它们分别指向了 `Dog` 和 `Cat` 对象。当调用 `sound()` 方法时，程序会根据它们实际指向的对象来执行对应的实现方法。
+
+#### 4. **优点**：
+
+将实现类的对象赋值给接口类型的变量有以下几个优点：
+
+- **解耦合**：代码依赖于接口，而不是实现类。这样当需要切换实现时，不需要修改使用该接口的代码。例如，你可以很轻松地用另一个实现类来替换 `Dog` 或 `Cat`，而不必改动使用接口的代码。
+
+- **灵活性**：你可以编写更加通用的代码，针对接口编程，而不是针对具体类编程。例如：
+
+  
+
+  ```java
+  public void makeSound(Animal animal) {
+      animal.sound();  // 这里不用关心 animal 是 Dog 还是 Cat，只要它实现了 Animal 接口
+  }
+  
+  // 调用
+  makeSound(new Dog());  // 输出 "Woof"
+  makeSound(new Cat());  // 输出 "Meow"
+  ```
+
+- **扩展性**：如果将来有新的类实现 `Animal` 接口（比如 `Bird`），你可以很轻松地将它们整合进现有的代码，而不需要修改现有代码：
+
+  
+
+  ```java
+  public class Bird implements Animal {
+      @Override
+      public void sound() {
+          System.out.println("Tweet");
+      }
+  }
+  
+  // 调用
+  makeSound(new Bird());  // 输出 "Tweet"
+  ```
+
+#### 5. **实际应用场景**：
+
+在实际开发中，使用接口编程可以让代码更具有扩展性和维护性。例如，很多框架和库（如 Spring、MyBatis）都依赖于接口来实现松耦合的设计。开发者只需要面向接口编程，而具体的实现可以根据需要在运行时动态替换。
+
+比如在 MyBatis 这样的 ORM 框架中，`UserMapper` 是一个接口，MyBatis 会在运行时生成该接口的实现类，并将其对象赋值给接口类型的变量：
+
+
+
+```java
+UserMapper userMapper = session.getMapper(UserMapper.class);
+```
+
+在这段代码中，`userMapper` 是 `UserMapper` 接口类型的变量，而它实际上指向了 MyBatis 动态生成的一个实现类的对象。通过这种方式，你可以调用接口
+
 ## 赋值的本质 堆区和栈区存储
 
 **对象赋值的本质：**
@@ -3227,7 +3338,7 @@ public class WriterDemo1 extends HttpServlet {
 
 ## session
 
-
+![image-20241124145048770](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241124145048770.png)
 
 
 
@@ -3247,7 +3358,51 @@ public class WriterDemo1 extends HttpServlet {
 
 
 
+# java路径问题
+
+在 Java 或 Maven 项目中，当你直接使用文件名（不包含路径）来访问文件时，Java 会从当前工作目录（Current Working Directory）开始查找文件。这个行为适用于使用 FileInputStream、FileOutputStream 或 File 类等直接操作文件系统的情况。以下是详细解释：
 
 
 
+不同运行环境下的当前工作目录：
+
+ 
+
+a. 在 IDE（如 Eclipse 或 IntelliJ IDEA）中运行：
+
+- 通常是项目的==根目录==（包含 src 文件夹和 pom.xml 的目录）。
+
+
+
+b. 通过命令行运行 JAR 文件：
+
+- 是执行 java -jar 命令的目录。
+
+c. 在 Web 应用服务器中运行：
+
+- 可能是服务器的某个特定目录，取决于服务器配置。
+
+1. ==Maven 项目结构的影响：==
+   - Maven 的标准目录结构（如 src/main/resources）主要影响构建过程和类路径资源的加载。
+   - 它不直接影响文件系统操作中的相对路径解析。
+
+|                       在 Maven 项目中                        |      |
+| :----------------------------------------------------------: | ---- |
+| src/main/java 中的源代码编译后会放在 target/classes。==src/main/resources== 中的资源文件也会复制到 target/classes。target/classes 成为运行时的类路径根。 |      |
+
+
+
+| Maven 目录位置                    | 包含的文件类型                                               |
+| :-------------------------------- | :----------------------------------------------------------- |
+| 项目根目录                        | - pom.xml (Maven 项目文件) - README.md - .gitignore - Dockerfile - docker-compose.yml - 构建脚本 (.sh, .bat) - 日志文件 (.log) |
+| src/main/java                     | - Java 源代码文件 (.java)                                    |
+| src/main/resources                | - 配置文件 (.properties, .xml, .yml, .json) - 日志配置文件 - 国际化资源文件 - 静态资源 (对于非 Web 项目) - 数据文件 (CSV, JSON 用于应用) - 数据库迁移脚本 - API 文档文件 (如 Swagger) |
+| src/main/webapp (仅用于 Web 项目) | - HTML 文件 - JSP 文件 - CSS 文件 - JavaScript 文件 - 图片文件 - web.xml (部署描述符) - 其他 Web 资源 |
+| src/test/java                     | - 测试 Java 源代码文件 - 单元测试文件                        |
+| src/test/resources                | - 测试配置文件 - 测试数据文件 - 测试特定的资源文件           |
+| target                            | - 编译后的 .class 文件 - 打包后的 JAR/WAR 文件 - 生成的报告和文档 |
+| target/classes                    | - 编译后的主要类文件 - 从 src/main/resources 复制的资源文件  |
+| target/test-classes               | - 编译后的测试类文件 - 从 src/test/resources 复制的测试资源文件 |
+
+[Maven link to 项目结构管理](Maven.md)
 
