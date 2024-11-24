@@ -2888,6 +2888,8 @@ Tomcat服务器下可有多个项目
 
 **销毁：服务器关闭或应用程序停止**
 
+**service 方法可以执行多次**
+
 ![image-20241123152222238](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123152222238.png)
 
 ## HttpServletRequest对象
@@ -2942,7 +2944,7 @@ public class servlet3 extends HttpServlet {
 
 ![image-20241123160145280](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123160145280.png)
 
-### 请求乱码问题
+### 请求乱码（Messey code）问题
 
 编码格式 ≠ 解码格式 -->==“乱码”==
 
@@ -2960,7 +2962,23 @@ public class servlet3 extends HttpServlet {
 
 ![image-20241123161259247](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123161259247.png)
 
+![image-20241123171400601](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123171400601.png)
 
+![image-20241123171416989](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123171416989.png)
+
+
+
+![image-20241123180713283](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123180713283.png)
+
+### 域对象
+
+
+
+**s05跳转s06**
+
+![image-20241123181029124](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123181029124.png)
+
+![image-20241123180934795](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123180934795.png)
 
 
 
@@ -2970,17 +2988,238 @@ public class servlet3 extends HttpServlet {
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | `action` 属性定义了表单提交时,数据应该发送到哪个URL进行处理。它指定了处理表单数据的服务器脚本的路径。 | `name` 属性为表单元素提供一个名称,这个名称会在表单提交时与该元素的值一起发送到服务器。它用于在服务器端识别不同的表单数据。 |
 
+~~~java
+@WebServlet("/test1")
+public class MessyCode extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println(request.getParameter("name"));
+        // get 不会messycode
+        // 试试post
+        System.out.println(request.getParameter("age")); // 表单提交本质和get里请求行一样 只是和数据的敏感性以及数据的数量有关
+        System.out.println(request.getParameter("grade"));
+
+    }
+}
+~~~
+
+~~~html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="test1" method="post">
+    <input type="text" name="age">
+    <br>
+    <input type="text" name="grade">
+    <button>点击提交</button>
+</form>
+</body>
+</html>
+~~~
+
 
 
 ## HttpServletReponse对象
 
+`HttpServletResponse` 是 Java Servlet API 中的一个接口，专门用于处理 HTTP 响应。它提供了一系列方法，使开发人员能够控制响应头、响应状态以及响应体的内容。以下是关于 `HttpServletResponse` 的详细解释，包括它的作用、主要内容和常用方法。
+
+### 1. 定义和作用
+
+- **定义**：`HttpServletResponse` 是 `javax.servlet.http` 包中的一个接口，继承自 `ServletResponse` 接口。它提供了对 HTTP 响应的访问和操作。
+- **作用**：`HttpServletResponse` 的主要作用是向客户端（如浏览器）发送响应数据。这包括设置响应状态码、内容类型、响应头，以及将响应体中的数据写回客户端。
+
+### 2. 主要内容
+
+`HttpServletResponse` 的内容可以分为几个部分：
+
+1. **响应状态**：
+   - HTTP 响应状态码，指示请求的结果。例如，200 表示成功，404 表示未找到，500 表示服务器错误等。
+2. **响应头**：
+   - 包含关于响应的信息，例如内容类型（`Content-Type`）、内容长度（`Content-Length`）、缓存控制（`Cache-Control`）、设置 Cookie 等。
+   - ==Content-Type: text/html; charset=UTF-8==
+3. **响应体**：
+   - 实际返回给客户端的数据内容，例如 HTML 文档、JSON 数据、图像、文件下载等。
+
+### 3. 常用方法
+
+`HttpServletResponse` 提供了多种方法来设置响应的各个部分。以下是一些常用方法的说明：
+
+#### 1. 设置响应状态
+
+- **`setStatus(int sc)`**：设置响应状态码。
+
+  
+
+  ```java
+  response.setStatus(HttpServletResponse.SC_OK); // 设置状态码为 200
+  ```
+
+- **`sendError(int sc, String msg)`**：发送错误响应。
+
+  
+
+  ```java
+  response.sendError(HttpServletResponse.SC_NOT_FOUND, "Page not found"); // 设置状态码为 404
+  ```
+
+#### 2. 设置响应头
+
+- **`setHeader(String name, String value)`**：设置指定名称的响应头。
+
+  
+
+  ```java
+  response.setHeader("Cache-Control", "no-cache"); // 设置缓存控制
+  ```
+
+- **`addHeader(String name, String value)`**：添加一个响应头。
+
+  
+
+  ```java
+  response.addHeader("Set-Cookie", "sessionId=abc123; Path=/; HttpOnly");
+  ```
+
+- **`setContentType(String type)`**：设置响应的内容类型（MIME 类型）。
+
+  
+
+  ```java
+  response.setContentType("text/html; charset=UTF-8"); // 设置内容类型为 HTML
+  ```
+
+#### 3. 获取输出流
+
+- **`getWriter()`**：获取一个 `PrintWriter` 对象，用于向响应体写入字符数据。
+
+  
+
+  ```java
+  PrintWriter out = response.getWriter();
+  out.println("<html><body><h1>Hello, World!</h1></body></html>");
+  ```
+
+- **`getOutputStream()`**：获取一个 `ServletOutputStream` 对象，用于向响应体写入二进制数据。
+
+  
+
+  ```java
+  ServletOutputStream out = response.getOutputStream();
+  out.write(...); // 写入二进制数据
+  ```
+
+![image-20241123220948364](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123220948364.png)
+
+| 特性         | `getWriter()`                                                | `getOutputStream()`                                          |
+| :----------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| 类型         | 返回 `PrintWriter`，用于字符输出                             | 返回 `ServletOutputStream`，用于二进制输出                   |
+| 用途         | 适用于输出文本（HTML、JSON、XML等）                          | 适用于输出二进制数据（图像、文件等）                         |
+| 字符编码     | 需要设置字符编码（如 UTF-8）                                 | 不涉及字符编码                                               |
+| 不能混合使用 | 如果调用了 `getWriter()`，则不能再调用 `getOutputStream()`，反之亦然 | 如果调用了 `getOutputStream()`，则不能再调用 `getWriter()`，反之亦然 |
+
+**与io流网络编程流类似** 结合复习
+
+**这里是通过HttpservletResponse 对象的方法获取字节输出流或者字符输出流**
+
+---
+
+==联系文件/网络IO流==
+
+| 特性         | **PrintWriter**                          | **ServletOutputStream**              |
+| :----------- | :--------------------------------------- | :----------------------------------- |
+| **数据类型** | 主要用于字符流（文本数据）               | 主要用于二进制流（如图像、文件等）   |
+| **适用场景** | 生成 HTML、JSON、XML 和纯文本响应        | 发送压缩数据、图像、PDF 等二进制内容 |
+| **输出方式** | 使用 `println()`、`print()` 方法输出字符 | 使用 `write()` 方法输出字节          |
+| **性能**     | 对于文本数据，性能较好，但不适合大文件   | 对于大文件和流式传输，性能更佳       |
+| **互斥性**   | 不能与 `getOutputStream()` 一起使用      | 不能与 `getWriter()` 一起使用        |
+
+~~~java
+@WebServlet("/wr1")
+public class WriterDemo1 extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        PrintWriter out = response.getWriter();
+//        out.write("Hello world");
+        // 不能同时使用
+        ServletOutputStream sos = response.getOutputStream();
+        sos.write("<h1 style=\"color:red;\">Hello World</h1>".getBytes());
+
+    }
+~~~
 
 
 
 
 
+## 响应乱码问题
+
+### MIME类型
+
+| MIME 类型                           | 描述                           |
+| :---------------------------------- | :----------------------------- |
+| `text/plain`                        | 普通文本文件                   |
+| `text/html`                         | HTML 文件                      |
+| `text/css`                          | CSS 文件                       |
+| `text/javascript`                   | JavaScript 文件                |
+| `application/json`                  | JSON 数据                      |
+| `application/xml`                   | XML 数据                       |
+| `application/pdf`                   | PDF 文件                       |
+| `application/octet-stream`          | 二进制数据（一般用于下载文件） |
+| `image/jpeg`                        | JPEG 图像                      |
+| `image/png`                         | PNG 图像                       |
+| `image/gif`                         | GIF 图像                       |
+| `audio/mpeg`                        | MPEG 音频                      |
+| `video/mp4`                         | MP4 视频                       |
+| `application/zip`                   | ZIP 压缩文件                   |
+| `application/x-www-form-urlencoded` | 表单数据编码类型               |
+
+
+
+
+
+![image-20241123221524023](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123221524023.png)
+
+==**响应头发送信息告知这是一个什么样的数据**==
+
+**encode 编码**
+
+
+
+## 重定向
+
+![image-20241123231650371](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123231650371.png)
+
+**也可重定向到其他servlet去**
+
+## 请求转发和重定向的区别
+
+![image-20241123231926410](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123231926410.png)
+
+
+
+
+
+![image-20241123223731618](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123223731618.png)
 
 ## cookie
+
+![image-20241123232412728](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241123232412728.png)
+
+### HTTP 的无状态性与 Cookie 的关系
+
+
+
+
+
+| 无状态性：                                                   | Cookie 的作用：                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 由于 HTTP 是无状态的，服务器在处理每个请求时并不知道前一个请求的任何信息。这种设计使得 HTTP 协议更简单，但也导致了需要一种机制来管理用户会话和状态。 | Cookie 用于克服 HTTP 的无状态性。通过在客户端存储一些信息（如用户 ID、会话 ID 等），服务器可以在后续请求中识别用户并维持会话状态。每当客户端发起请求时，浏览器会自动将相关的 Cookie 发送给服务器，从而使服务器能够识别用户。 |
+
+
 
 
 
