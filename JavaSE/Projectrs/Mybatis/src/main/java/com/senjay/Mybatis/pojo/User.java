@@ -1,4 +1,5 @@
-package com.senjay.Mybatis.pojo;public class User {
+package com.senjay.Mybatis.pojo;
+public class User {
     // 创建实体类
     private int id;
     private String name;
@@ -59,7 +60,7 @@ package com.senjay.Mybatis.pojo;public class User {
                 ", gender=" + gender +
                 '}';
     }
-    // 重写toString方法
+    // 重写toString方法 (ctrl + ,)
     // 作用: 打印对象时, 输出对象的属性值
 
 }

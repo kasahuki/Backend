@@ -7,7 +7,22 @@
 <!--        select * from Blog where id = #{id}-->
 <!--    </select>-->
         <insert id="insertUser">
-            insert into test1 values(null,20,'wushengjie','男');
+            insert into test2 values(null,'senjay',20,'男');
         </insert>
+        <delete id="deleteUser">
+            delete from test2 where name = 'wushengjie';
+        </delete>
+
+        <update id="updateUser">
+            update test2 set name = 'Attavoy' where name = 'Senjay';
+        </update>
+    
+    <select id="selectUser" resultType="com.senjay.Mybatis.pojo.User">
+        select * from test2 where id = 2;
+    </select>
+    <select id ="selectAllUser" resultType="com.senjay.Mybatis.pojo.User">
+        select * from test2 where id >2;
+    </select>
+
 
 </mapper>

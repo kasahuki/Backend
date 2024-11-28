@@ -322,30 +322,33 @@ public class UserMapperTest {
 	```
 2. 加入log4j的配置文件
 	- log4j的配置文件名为log4j.xml，存放的位置是src/main/resources目录下
-	- 日志的级别：FATAL(致命)>ERROR(错误)>WARN(警告)>INFO(信息)>DEBUG(调试) 从左到右打印的内容越来越详细
+	- **日志的级别：FATAL(致命)>ERROR(错误)>WARN(警告)>INFO(信息)>DEBUG(调试) 从左到右打印的内容越来越详细**
 	```xml
-	<?xml version="1.0" encoding="UTF-8" ?>
-	<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-	<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-	    <appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
-	        <param name="Encoding" value="UTF-8" />
-	        <layout class="org.apache.log4j.PatternLayout">
-				<param name="ConversionPattern" value="%-5p %d{MM-dd HH:mm:ss,SSS} %m (%F:%L) \n" />
-	        </layout>
-	    </appender>
-	    <logger name="java.sql">
-	        <level value="debug" />
-	    </logger>
-	    <logger name="org.apache.ibatis">
-	        <level value="info" />
-	    </logger>
-	    <root>
-	        <level value="debug" />
-	        <appender-ref ref="STDOUT" />
-	    </root>
-	</log4j:configuration>
+	    <?xml version="1.0" encoding="UTF-8" ?>
+	    <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+	    <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	        <appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+	            <param name="Encoding" value="UTF-8" />
+	            <layout class="org.apache.log4j.PatternLayout">
+	                <param name="ConversionPattern" value="%-5p %d{MM-dd HH:mm:ss,SSS} %m (%F:%L) \n" />
+	            </layout>
+	        </appender>
+	        <logger name="java.sql">
+	            <level value="debug" />
+	        </logger>
+	        <logger name="org.apache.ibatis">
+	            <level value="info" />
+	        </logger>
+	        <root>
+	            <level value="debug" />
+	            <appender-ref ref="STDOUT" />
+	        </root>
+	    </log4j:configuration>
 	```
 # 核心配置文件详解
+
+key：==顺序书写== 、 ==简化导入的繁琐操作==
+
 >核心配置文件中的标签必须按照固定的顺序(有的标签可以不写，但顺序一定不能乱)：
 properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapperFactory、reflectorFactory、plugins、environments、databaseIdProvider、mappers
 ```xml
@@ -434,6 +437,31 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 ![](Resources/默认的类型别名2.png)
 
 # MyBatis的增删改查
+
+## mapper接口
+
+~~~java
+package com.senjay.Mybatis.mapper;
+
+import com.senjay.Mybatis.pojo.User;
+
+public interface UserMapper {
+    int insertUser();// 如何进行传参到mapper映射文件当中动态查询数据库中表
+
+    void deleteUser();
+
+    void updateUser();
+
+    User selectUser(); // 要有返回值
+    // User实体类的作用就是返回数据库的查询字段而已
+
+
+}
+
+~~~
+
+
+
 1. 添加
 	```xml
 	<!--int insertUser();-->
@@ -462,7 +490,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 		select * from t_user where id = 2  
 	</select>
 	```
-5. 查询集合
+5. 查询集合（==多条数据==）
 	```xml
 	<!--List<User> getUserList();-->
 	<select id="getUserList" resultType="com.atguigu.mybatis.bean.User">
@@ -475,7 +503,129 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 		- resultType：自动映射，用于属性名和表中字段名一致的情况  
 		- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
 	2. 当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
+```sql
+CREATE TABLE user (
+    user_id INT PRIMARY KEY,
+    user_name VARCHAR(50),
+    user_age INT
+);
+
+CREATE TABLE order (
+    order_id INT PRIMARY KEY,
+    user_id INT,
+    order_date DATE,
+    total_amount DECIMAL(10,2)
+);
+```
+
+对应的 Java 类：
+
+
+
+```java
+public class User {
+    private int id;
+    private String name;
+    private int age;
+    private List<Order> orders;
+    // getters and setters
+}
+
+public class Order {
+    private int id;
+    private Date orderDate;
+    private BigDecimal totalAmount;
+    // getters and setters
+}
+```
+
+使用 resultMap 的 MyBatis 映射：
+
+
+
+```xml
+<resultMap id="userWithOrdersMap" type="com.example.User">
+    <id property="id" column="user_id"/>
+    <result property="name" column="user_name"/>
+    <result property="age" column="user_age"/>
+    <collection property="orders" ofType="com.example.Order">
+        <id property="id" column="order_id"/>
+        <result property="orderDate" column="order_date"/>
+        <result property="totalAmount" column="total_amount"/>
+    </collection>
+</resultMap>
+
+<select id="getUserWithOrders" resultMap="userWithOrdersMap">
+    SELECT u.user_id, u.user_name, u.user_age,
+           o.order_id, o.order_date, o.total_amount
+    FROM user u
+    LEFT JOIN order o ON u.user_id = o.user_id
+    WHERE u.user_id = #{id}
+</select>
+```
+
+**以便查询到的结果用==实现类==存储**
+
+~~~java
+<resultMap id="userWithOrdersMap" type="com.example.User">
+定义了一个 resultMap，ID 为 "userWithOrdersMap"
+指定了映射的目标类型为 com.example.User
+<id property="id" column="user_id"/>
+映射主键，将数据库列 "user_id" 映射到 User 类的 "id" 属性
+使用 标签表示这是一个唯一标识符
+<result property="name" column="user_name"/>
+将数据库列 "user_name" 映射到 User 类的 "name" 属性
+<result property="age" column="user_age"/>
+将数据库列 "user_age" 映射到 User 类的 "age" 属性
+<collection property="orders" ofType="com.example.Order">
+定义一个集合映射，表示 User 类中的 "orders" 属性是一个集合
+集合中的元素类型是 com.example.Order
+在 标签内：
+<id property="id" column="order_id"/>
+映射 Order 类的主键，将 "order_id" 列映射到 Order 类的 "id" 属性
+<result property="orderDate" column="order_date"/>
+将 "order_date" 列映射到 Order 类的 "orderDate" 属性
+<result property="totalAmount" column="total_amount"/>
+将 "total_amount" 列映射到 Order 类的 "totalAmount" 属性
+~~~
+
+==总之就是处理数据库表（字段）和java实现类（属性）的映射关系==
+
+
+
+![image-20241128194319219](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241128194319219.png)
+
+
+
+~~~java
+ List<User> list = userMapper.selectAllUser();
+        list.forEach(user -> System.out.println(user.toString()));// lambda表达式 user表示的是list集合中的每一个元素
+~~~
+
+
+
+### java8 特性 lambda表达式
+
+
+
+
+
+
+
+# Mybatis创建项目配置和添加模板（简化配置）
+
+
+
+
+
+
+
+
+
+
+
 # MyBatis获取参数值的两种方式（重点）
+
 - MyBatis获取参数值的两种方式：${}和#{}  
 - ${}的本质就是字符串拼接，#{}的本质就是占位符赋值  
 - ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以自动添加单引号
