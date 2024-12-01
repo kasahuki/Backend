@@ -24,7 +24,7 @@ public class test {
         UserMapper userMapper = session.getMapper(UserMapper.class);
 //        userMapper.insertUser();
 //        userMapper.deleteUser();
-//        userMapper.updateUser();
+//        userMapper.updateUser(); 提供了接口方法使用sql语句操作数据库
 //        User User = userMapper.selectUser();
 //        System.out.println(User.toString());
         List<User> list = userMapper.selectAllUser();

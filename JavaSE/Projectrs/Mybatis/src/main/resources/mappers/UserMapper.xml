@@ -19,6 +19,7 @@
     
     <select id="selectUser" resultType="com.senjay.Mybatis.pojo.User">
         select * from test2 where id = 2;
+<!--        跳转到数据库终端执行 将结果返回到实体类中也就是映射 （表字段column 类属性properties）名字要一一对应不然就去手动映射-->
     </select>
     <select id ="selectAllUser" resultType="com.senjay.Mybatis.pojo.User">
         select * from test2 where id >2;

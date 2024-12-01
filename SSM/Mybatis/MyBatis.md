@@ -142,6 +142,8 @@ version：依赖的版本号。例如 8.0.34。-->
     </mappers>
 </configuration>
 ```
+
+
 ## 创建实体类
 
 ~~~java
@@ -394,7 +396,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
             transactionManager：设置事务管理方式
             属性：
 	            type：设置事务管理方式，type="JDBC|MANAGED"
-	            type="JDBC"：设置当前环境的事务管理都必须手动处理
+	            type="JDBC"：设置当前环境的 事务管理 都必须 手动处理 
 	            type="MANAGED"：设置事务被管理，例如spring中的AOP
             -->
             <transactionManager type="JDBC"/>
@@ -417,6 +419,8 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
                 <property name="password" value="${jdbc.password}"/>
             </dataSource>
         </environment>
+        
+       
     </environments>
     <!--引入映射文件-->
     <mappers>
@@ -426,15 +430,93 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
         注意：
 			1. 此方式必须保证mapper接口和mapper映射文件必须在相同的包下
 			2. mapper接口要和mapper映射文件的名字一致
+
+sum:一一对应的映射关系
+
         -->
         <package name="com.atguigu.mybatis.mapper"/>
     </mappers>
 </configuration>
 ```
-- ![](Resources/mapper接口和mapper映射文件在同一包下.png)
-# 默认的类型别名
-![](Resources/默认的类型别名1.png)
-![](Resources/默认的类型别名2.png)
+# Mybatis创建项目配置和添加模板（简化配置）
+
+**setting -->files template ++模板即可** ==good！！！==
+
+![image-20241201154650974](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241201154650974.png)
+
+![image-20241201154655973](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241201154655973.png)
+
+ 环境集合中可以有多个环境（数据库） 可以设置默认值
+
+数据库连接池：节约数据库连接开销
+
+设置了类型别名后就不用写==全类名==了（在返回实例对象存储数据库返回值时） 也可以包为单位
+
+![image-20241201145707302](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241201145707302.png)
+
+==net不是new==
+
+
+
+### 上下文？？？
+
+![image-20241201144152488](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241201144152488.png)
+
+**	**
+
+**实体类用于接收表数据（映射）**
+
+封装SqlSessionUtils类 里面提供众多方法中的一个获取session
+
+
+
+~~~java
+public class SqlsessionUtils {
+    public static SqlSession getSqlSession() {
+        SqlSession sqlSession = null;
+        InputStream inputStream = null;
+        try {
+            inputStream = Resources.getResourceAsStream("Mybatis-config.xml");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // 注意异常
+
+        SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        SqlSessionFactory factory = builder.build(inputStream);
+        sqlSession = factory.openSession();
+        return sqlSession;
+    }
+}
+~~~
+
+
+
+~~~java
+public class TestMapper { // 类名不能是Test 这样会与关键字冲突
+   @Test
+    public void testUserMapper() throws IOException {
+
+     SqlSession session =  new SqlsessionUtils().getSqlSession();
+        // 通用
+        // 获取接口的实现类
+        UserMapper userMapper = session.getMapper(UserMapper.class);
+//        userMapper.insertUser();
+//        userMapper.deleteUser();
+//        userMapper.updateUser(); 提供了接口方法使用sql语句操作数据库
+//        User User = userMapper.selectUser();
+//        System.out.println(User.toString());
+        List<User> list = userMapper.selectAllUser();
+        list.forEach(user -> System.out.println(user.toString()));// lambda表达式 user表示的是list集合中的每一个元素
+
+        session.commit();// 事务要进行提交
+
+        session.close();// 要记得关闭资源
+    }
+}
+~~~
+
+
 
 # MyBatis的增删改查
 
@@ -595,7 +677,7 @@ public class Order {
 
 ![image-20241128194319219](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20241128194319219.png)
 
-
+​	
 
 ~~~java
  List<User> list = userMapper.selectAllUser();
@@ -607,12 +689,6 @@ public class Order {
 ### java8 特性 lambda表达式
 
 
-
-
-
-
-
-# Mybatis创建项目配置和添加模板（简化配置）
 
 
 
@@ -724,7 +800,18 @@ public void checkLoginByParam() {
 
 	1. 实体类类型的参数
 	2. 使用@Param标识参数
+
+
+[查看模板根代码]()
+
+---
+
+
+
+
+
 # MyBatis的各种查询功能
+
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收
 	2. List集合接收
