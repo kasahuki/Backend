@@ -696,15 +696,21 @@ public class Order {
 
 
 
-
+[查看模板根代码](https://github.com/kasahuki/Backend/tree/main/JavaSE/Projectrs/MybatisStandardTemplateTest)
 
 
 
 # MyBatis获取参数值的两种方式（重点）
 
 - MyBatis获取参数值的两种方式：${}和#{}  
-- ${}的本质就是字符串拼接，#{}的本质就是占位符赋值  
+- ${}的本质就是**字符串拼接**(==要加引号==)，#{}的本质就是占位符赋值  
+
+## 字符串拼接容易引发sql 注入
+
+**本质sql 语句就是String字符串所以 就利用了Java字符串的拼接**
+
 - ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以自动添加单引号
+
 ## 单个字面量类型的参数
 - 若mapper接口中的方法参数为单个的字面量类型，此时可以使用\${}和#{}以任意的名称（最好见名识意）获取参数的值，注意${}需要手动加单引号
 ```xml
@@ -720,7 +726,7 @@ public class Order {
 </select>
 ```
 ## 多个字面量类型的参数
-- 若mapper接口中的方法参数为多个时，此时MyBatis会自动将这些参数放在一个map集合中
+- 若mapper接口中的方法参数为多个时，此时MyBatis会==自动==将这些参数放在一个==map集合==中
 
 	1. 以arg0,arg1...为键，以参数为值；
 	2. 以param1,param2...为键，以参数为值；
@@ -775,7 +781,10 @@ public void insertUser() {
 	mapper.insertUser(user);
 }
 ```
-## 使用@Param标识参数
+## 使用@Param标识参数 (最重要！！！)
+
+
+
 - 可以通过@Param注解标识mapper接口中的方法参数，此时，会将这些参数放在map集合中 
 
 	1. 以@Param注解的value属性值为键，以参数为值；
@@ -800,13 +809,58 @@ public void checkLoginByParam() {
 
 	1. 实体类类型的参数
 	2. 使用@Param标识参数
+1. MyBatis XML映射文件示例：
 
 
-[查看模板根代码]()
 
----
+```xml
+<select id="someMethod" resultType="User">
+    SELECT * FROM users WHERE name = #{name}
+</select>
+```
+
+1. 如果注解使用了不同的参数名：
 
 
+
+```java
+public User someMethod(@Param("paramName") String differentName);
+```
+
+对应的XML：
+
+
+
+```xml
+<select id="someMethod" resultType="User">
+    SELECT * FROM users WHERE name = #{paramName}
+</select>
+```
+
+1. 多参数情况：
+
+
+
+```java
+public User getUserByNameAndAge(@Param("name") String name, @Param("age") int userAge);
+```
+
+对应的XML：
+
+
+
+```xml
+<select id="getUserByNameAndAge" resultType="User">
+    SELECT * FROM users WHERE name = #{name} AND age = #{age}
+</select>
+```
+
+- `#{}` 是预编译参数，推荐使用（防SQL注入）
+- `${}` 是直接替换，不推荐用于用户输入
+
+
+
+# ==————————————==
 
 
 
@@ -814,9 +868,9 @@ public void checkLoginByParam() {
 
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收
-	2. List集合接收
+	2. **List集合接收**
 	3. Map集合接收，结果`{password=123456, sex=男, id=1, age=23, username=admin}`
-2. 如果查询出的数据有多条，一定不能用实体类对象接收，会抛异常TooManyResultsException，可以通过
+2. 如果查询出的数据**有多条，一定不能用实体类对象接收**，会抛异常TooManyResultsException，可以通过
 	1. 实体类类型的LIst集合接收
 	2. Map类型的LIst集合接收
 	3. 在mapper接口的方法上添加@MapKey注解
@@ -850,14 +904,17 @@ List<User> getUserList();
 </select>
 ```
 ## 查询单个数据
+
+**返回类型为基本数据类型/引用数据类型**  integer int …… （==java bean==）
+
 ```java
 /**  
  * 查询用户的总记录数  
  * @return  
- * 在MyBatis中，对于Java中常用的类型都设置了类型别名  
- * 例如：java.lang.Integer-->int|integer  
- * 例如：int-->_int|_integer  
- * 例如：Map-->map,List-->list  
+ * 在MyBatis中，对于Java中常用的类型都设置了类型别名  (alias)
+ * 例如：java.lang.Integer-->int / integer  
+ * 例如：int-->_int / _integer  
+ * 例如：Map-->map , List-->list  
  */  
 int getCount();
 ```
@@ -867,7 +924,10 @@ int getCount();
 	select count(id) from t_user
 </select>
 ```
-## 查询一条数据为map集合
+## 查询==一条==数据为map集合
+
+**map集合（键值对集合） ！！！** **和json数据格式有关系 重要！！！！**
+
 ```java
 /**  
  * 根据用户id查询用户信息为map集合  
@@ -875,6 +935,7 @@ int getCount();
  * @return  
  */  
 Map<String, Object> getUserToMap(@Param("id") int id);
+// 返回类型是一个map集合
 ```
 ```xml
 <!--Map<String, Object> getUserToMap(@Param("id") int id);-->
@@ -883,7 +944,8 @@ Map<String, Object> getUserToMap(@Param("id") int id);
 </select>
 <!--结果：{password=123456, sex=男, id=1, age=23, username=admin}-->
 ```
-## 查询多条数据为map集合
+## 查询==多条==数据为map集合
+
 ### 方法一
 ```java
 /**  
@@ -906,6 +968,11 @@ List<Map<String, Object>> getAllUserToMap();
 -->
 ```
 ### 方法二
+
+相当于==二维map==
+
+**用map里唯一不重复字段作为键 映射的值即为包含这个字段的map集合**
+
 ```java
 /**
  * 查询所有用户信息为map集合

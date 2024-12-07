@@ -19,6 +19,11 @@ public class TestMapper { // 类名不能是Test 这样会与关键字冲突
 
         SqlSession session = new SqlsessionUtils().getSqlSession();// 通用        // 获取接口的实现类
         //ctrl + alt + l 格式化代码
+        UserMapper mapper = session.getMapper(UserMapper.class);
+        System.out.println(mapper.selectUserById(1).toString());
+        System.out.println(mapper.selectUserByNameAndId("Attavoy",1).toString());
+        session.close();
+
 
 
     }
