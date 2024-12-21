@@ -18,6 +18,7 @@ public class SqlsessionUtils {
             throw new RuntimeException(e);
         }
         // 注意异常
+    // TODO : 待复习
 
         SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
         SqlSessionFactory factory = builder.build(inputStream);
