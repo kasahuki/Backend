@@ -2176,7 +2176,7 @@ public class CharOutput {
 
 
 
-### 字符==缓冲流==
+### 字符==缓冲流== （也就是过滤流 ==》过滤流就是对流进行处理的流 也就是包装流）
 
 #### readline (输入)  & newLine （输出）
 
@@ -2230,6 +2230,458 @@ public class CharStream {
 ![image-20250101211931707](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101211931707.png)
 
 
+
+### 数据流 （DataOutputStream） 也是过滤流
+
+### 1. **`writeInt` 的二进制格式**
+
+`writeInt` 将一个 `int` 类型的整数（32 位）写入文件时，会将其拆分为 **4 个字节**，并按照 **大端序**（Big-Endian）存储。大端序（符合人类阅读习惯）是指**高位字节存储在低地址**，低位字节存储在高地址。
+
+例如，整数 `100` 的二进制表示为：
+
+# :# ： 越左地址越低
+
+```
+00000000 00000000 00000000 01100100
+```
+
+`writeInt` 会将其拆分为 4 个字节并写入文件：
+
+
+
+```
+00000000 (字节 1)
+00000000 (字节 2)
+00000000 (字节 3)
+01100100 (字节 4)
+```
+
+------
+
+### 2. **`readInt` 的读取规则**
+
+`readInt` 从文件中读取 4 个字节，并将它们按照 **大端序** 重新组合为一个 `int` 类型的整数。
+
+例如，从文件中读取的 4 个字节为：
+
+复制
+
+```
+00000000 (字节 1)
+00000000 (字节 2)
+00000000 (字节 3)
+01100100 (字节 4)
+```
+
+`readInt` 会将它们重新组合为：
+
+复制
+
+```
+00000000 00000000 00000000 01100100
+```
+
+对应的整数是 `100`。
+
+```java
+package demo1.IO流测试;
+
+import java.io.*;
+
+public class AsciiTest {
+    public static void main(String[] args) throws IOException {
+        FileOutputStream fos = new FileOutputStream ("testDemo/sources/test1");
+        // 以二进制格式写入文件 所以打不开文件
+        FileInputStream fis = new FileInputStream ("testDemo/sources/test1");
+        DataOutputStream dos = new DataOutputStream(fos);
+        DataInputStream dis = new DataInputStream(fis);
+
+
+        int src[] = {58,23,56,89};
+        for (int i = 0 ; i<src.length ;i++) {
+            dos.writeInt(src[i]);
+        }
+        // 验证 以二进制格式读取
+        for(int i = 0 ;i<src.length ;i++) {
+            System.out.println(dis.readInt()+ " ");
+        }
+
+        dos.close();
+
+
+
+    }
+}
+```
+
+### RandomAccessFile 类
+
+`RandomAccessFile` 是 Java 中一个非常强大的类，它允许 **随机访问文件**，即可以从文件的任意位置读取或写入数据。与 `FileInputStream` 和 `FileOutputStream` 不同，`RandomAccessFile` 既可以读取文件，也可以写入文件，并且支持文件的随机访问。
+
+#### 特点
+
+
+
+1. **随机访问**：
+
+   - 可以通过 `seek()` 方法将文件指针移动到文件的任意位置，然后进行读取或写入。
+
+2. **读写模式**：
+
+   - 支持只读模式（`"r"`）、读写模式（`"rw"`）等。
+
+3. **多功能**：
+
+   - 可以读取和写入基本数据类型（如 `int`、`double` 等）以及字节数据。
+
+4. **文件指针**：
+
+   - 通过 `getFilePointer()` 方法获取当前文件指针的位置。
+   - 通过 `length()` 方法获取文件的长度。
+
+   ==读取的过程中文件指针也会移动的！！！==
+
+   ==移动的单位是==
+
+   - **例如，`seek(0)` 将文件指针移动到文件的开头。（也就是第一个）**
+   - **`seek(10)` 将文件指针移动到文件的第 11 个字节（从 0 开始计数）。**
+
+# 泛型
+
+可接收多个泛型参数
+
+
+
+    public class Pair<K, V> {
+    	private K key;
+     	private V value;
+    // 构造方法
+    public Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+    
+    // Getter 和 Setter 方法
+    public K getKey() {
+        return key;
+    }
+    
+    public void setKey(K key) {
+        this.key = key;
+    }
+    
+    public V getValue() {
+        return value;
+    }
+    
+    public void setValue(V value) {
+        this.value = value;
+    }
+    
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "key=" + key +
+                ", value=" + value +
+                '}';
+    }
+}
+
+
+
+![image-20250101231029945](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101231029945.png)
+
+
+
+### 泛型接口 
+
+![	](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101231125808.png)
+
+
+
+### 通配泛型参数
+
+![image-20250101231443338](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101231443338.png)
+
+
+
+---
+
+
+
+![image-20250101231511321](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101231511321.png)
+
+
+
+---
+
+### 泛型方法
+
+![image-20250101231803720](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101231803720.png)
+
+
+
+### 泛型使用限制
+
+**类型参数只能是引用类型不能是基本类型！！**
+
+![image-20250101232226483](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101232226483.png)
+
+## 集合类
+
+如果一个类实现了**子接口**，那么它**必须**实现**父接口**的所有抽象方法。这是因为**子接口**继承了父接口的方法，而类实现子接口时，就需要实现子接口及其父接口的所有方法。
+
+### 1. **集合框架的层次结构**
+
+Java 集合框架的核心接口和类位于 `java.util` 包中，主要分为以下几类：
+
+#### （1）**Collection 接口**
+
+**Collection接口定义了十多个方法，用于增加、删除和查询数据元素实现了这个接口的所有数据容器就有了相同的操作方式。**
+
+![image-20250101234522653](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250101234522653.png)
+
+- 表示一组对象的集合。
+- 主要子接口：
+  - `List`：有序且==允许==重复元素的集合。
+  - `Set`：无序且==不允许==重复元素的集合。
+  - `Queue`：队列，支持先进先出（FIFO）或优先级排序。
+
+#### （2）**Map 接口**
+
+- 表示键值对的集合。
+- 主要实现类：
+  - `HashMap`：基于**哈希表**的键值对集合。
+  - `TreeMap`：基于**红黑树**的键值对集合， 按 **键（key）**==排序==。
+
+------
+
+### 2. **常用集合类及其用法**
+
+#### （1）**List（列表）**
+
+- **特点**：有序且允许重复元素。
+
+- **常用实现类**：
+
+  - `ArrayList`：基于动态数组 实现，支持快速随机访问。 类似 vector动态数组
+
+    
+
+  - `LinkedList`：基于==双向链表==实现，支持快速插入和删除。
+
+##### 示例：
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListExample {
+    public static void main(String[] args) {
+        List<String> list = new ArrayList<>();
+        list.add("Apple");
+        list.add("Banana");
+        list.add("Cherry");
+
+        System.out.println(list); // 输出：[Apple, Banana, Cherry]
+        System.out.println(list.get(1)); // 输出：Banana
+    }
+}
+```
+
+------
+
+#### （2）**Set（集合）**
+
+- **特点**：无序且不允许重复元素。
+- **常用实现类**：
+  - `HashSet`：基于==哈希表==实现，支持快速查找。
+  - `TreeSet`：基于==红黑树==实现，元素按自然顺序排序。
+
+##### 示例：
+
+
+
+```java
+import java.util.HashSet;
+import java.util.Set;
+
+public class SetExample {
+    public static void main(String[] args) {
+        Set<String> set = new HashSet<>();
+        set.add("Apple");
+        set.add("Banana");
+        set.add("Apple"); // 重复元素，不会被添加
+
+        System.out.println(set); // 输出：[Apple, Banana]
+    }
+}
+```
+
+------
+
+#### （3）**Queue（队列）**
+
+- **特点**：支持先进先出（FIFO）或优先级排序。
+- **常用实现类**：
+  - **`LinkedList`：可以用作==队列==或==双端队列==。**
+  - **`PriorityQueue`：基于==优先级堆==实现，元素按优先级排序。**
+
+##### 示例：
+
+```java
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class QueueExample {
+    public static void main(String[] args) {
+        Queue<String> queue = new LinkedList<>();
+        queue.offer("Apple");
+        queue.offer("Banana");
+        queue.offer("Cherry");
+
+        System.out.println(queue.poll()); // 输出：Apple
+        System.out.println(queue.poll()); // 输出：Banana
+    }
+}
+```
+
+------
+
+#### （4）**Map（映射）**
+
+- **特点**：存储键值对**，键不允许重复。**
+- **常用实现类**：
+  - `HashMap`：基于哈希表实现，**支持快速查找。**
+  - `TreeMap`：基于红黑树实现，**按键排序。**
+
+##### 示例：
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+public class MapExample {
+    public static void main(String[] args) {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("Apple", 1);
+        map.put("Banana", 2);
+        map.put("Cherry", 3);
+
+        System.out.println(map.get("Banana")); // 输出：2
+        System.out.println(map.containsKey("Apple")); // 输出：true
+    }
+}
+```
+
+------
+
+### 3. **集合类的选择**
+
+- **需要有序且允许重复元素**：使用 `List`（如 `ArrayList`、`LinkedList`）。
+- **需要无序且不允许重复元素**：使用 `Set`（如 `HashSet`、`TreeSet`）。
+- **需要先进先出或优先级排序**：使用 `Queue`（如 `LinkedList`、`PriorityQueue`）。
+- **需要存储键值对**：使用 `Map`（如 `HashMap`、`TreeMap`）。
+
+------
+
+### 4. **集合类的常用操作**
+
+#### （1）**遍历集合**
+
+- 使用 `for-each` 循环：
+
+  ```
+  for (String item : list) {
+      System.out.println(item);
+  }
+  ```
+
+- 使用迭代器：
+
+  ```
+  Iterator<String> iterator = list.iterator();
+  while (iterator.hasNext()) {
+      System.out.println(iterator.next());
+  }
+  ```
+
+#### （2）**排序集合**
+
+
+
+- 使用 `Collections.sort()` 对 `List` 排序：
+
+  ```
+  Collections.sort(list);
+  ```
+
+- 使用 `TreeSet` 或 `TreeMap` 对元素自动排序。
+
+- ###  **`Collections`**
+
+  - **定义**：
+    `Collections` 是一个 **工具类**，位于 `java.util` 包中。
+  - **作用**：
+    - 提供了一组静态方法，用于操作或返回集合。
+    - 主要用于对集合进行排序、查找、反转、同步等操作。
+  - **特点**：
+    - 不能被实例化（构造方法是私有的）。
+    - 所有方法都是静态的，可以直接通过类名调用。
+  - **常用方法**：
+    - `sort(List<T> list)`：对列表进行排序。
+    - `reverse(List<?> list)`：反转列表中的元素。
+    - `shuffle(List<?> list)`：随机打乱列表中的元素。
+    - `binarySearch(List<? extends Comparable<? super T>> list, T key)`：在有序列表中查找元素。
+
+#### （3）**查找元素**
+
+- 使用 `contains()` 方法检查**集合**是否包含某个元素：
+
+  
+
+  ```
+  boolean contains = list.contains("Apple");
+  ```
+
+#### （4）**删除元素**
+
+- 使用 `remove()` 方法删除元素：
+
+  
+
+  ```
+  list.remove("Apple");
+  ```
+
+------
+
+### 5. **集合类的性能比较**
+
+| 集合类       | 实现方式 | 插入性能 | 查找性能 | 删除性能 | 是否有序 | 是否允许重复 |
+| :----------- | :------- | :------- | :------- | :------- | :------- | :----------- |
+| `ArrayList`  | 动态数组 | O(1)     | O(1)     | O(n)     | 是       | 是           |
+| `LinkedList` | 双向链表 | O(1)     | O(n)     | O(1)     | 是       | 是           |
+| `HashSet`    | 哈希表   | O(1)     | O(1)     | O(1)     | 否       | 否           |
+| `TreeSet`    | 红黑树   | O(log n) | O(log n) | O(log n) | 是       | 否           |
+| `HashMap`    | 哈希表   | O(1)     | O(1)     | O(1)     | 否       | 键不允许重复 |
+| `TreeMap`    | 红黑树   | O(log n) | O(log n) | O(log n) | 是       | 键不允许重复 |
+
+`LinkedList` 和`ArrayList`是 **有序的**，但这种有序是指 **插入顺序**，即元素在 `LinkedList` 中的排列顺序与元素被插入的顺序保持一致。
+
+正正自然排序或者自定义顺序的是 **TreeMap 和 PriorityQueue**
+
+
+
+### 集合类方法
+
+| 操作     | `ArrayList`/`LinkedList` | `HashSet`/`TreeSet`  | `HashMap`/`TreeMap`   |
+| :------- | :----------------------- | :------------------- | :-------------------- |
+| **增**   | `add(E e)`               | `add(E e)`           | `put(K key, V value)` |
+| **删**   | `remove(Object o)`       | `remove(Object o)`   | `remove(Object key)`  |
+| **改**   | `set(int index, E e)`    | 先删后增             | `put(K key, V value)` |
+| **查**   | `get(int index)`         | `contains(Object o)` | `get(Object key)`     |
+| **长度** | `size()`                 | `size()`             | `size()`              |
 
 # 多线程
 
