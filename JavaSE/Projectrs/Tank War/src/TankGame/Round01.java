@@ -13,6 +13,7 @@ public class Round01 extends JFrame { // 框架放置画板的
         mp = new Mypanel(); // 实例化面板
         this.add(mp); // 窗口中填放画板
         this.addKeyListener(mp);// 在窗口设置监听器而不是画板
+        // 事件源是窗口 --> 监听器是画板
         this.setSize(1000, 750); // 设定窗口大小
         this.setVisible(true);// 可见
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// 窗口不可视化后结束程序
