@@ -14,7 +14,9 @@ public class Servlet2 extends HttpServlet {
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println(request.getRequestURI()); // /myArtifact1/sr2
         System.out.println(request.getRequestURL()); // http://localhost:8080/myArtifact1/sr2
-        System.out.println(request.getQueryString()); // name=Senjay
+        System.out.println(request.getQueryString()); // ?name=Senjay&age=25
+        System.out.println(request.getParameter("name")); // Senjay
+        System.out.println(request.getParameter("age"));// 25
         System.out.println(request.getMethod()); // GET
         System.out.println(request.getProtocol()); // HTTP/1.1
         System.out.println(request.getContextPath()); //获取webapp名字 // /myArtifact1

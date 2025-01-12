@@ -16,9 +16,12 @@ public class WriterDemo1 extends HttpServlet {
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //        PrintWriter out = response.getWriter();
 //        out.write("Hello world");
+        //字符数据
         // 不能同时使用
         ServletOutputStream sos = response.getOutputStream();
         sos.write("<h1 style=\"color:red;\">Hello World</h1>".getBytes());
+        // 二进制数据
+
 
     }
 }

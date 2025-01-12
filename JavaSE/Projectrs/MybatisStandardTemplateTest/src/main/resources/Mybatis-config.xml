@@ -7,7 +7,7 @@
 
     <properties resource="jdbc.properties"/>
     <typeAliases>
-        <!--以包为单位，设置改包下所有的类型都拥有默认的别名，即类名且不区分大小写-->
+        <!--以包为单位（设置包路径），设置改包下所有的类型都拥有默认的别名，即类名且不区分大小写 这样映射文件中就不用写全类名了-->
         <package name=""/>
     </typeAliases>
     <environments default="development">

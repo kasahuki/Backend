@@ -23,6 +23,9 @@ public class Mypanel extends JPanel implements KeyListener {
     public Mypanel() {
         hero = new Hero(100, 100);
         // 初始化坦克对象
+
+        // hero继承了Tank类 可以使用它的方法和属性
+        // private 只是说明子类无法访问到父类的不代表自己不能用父类具有的属性
         hero.setDirection(2);// 设置方向
         hero.setSpeed(50);
         // 没有必要封装到hero里 , 直接调用方法改变/获取值

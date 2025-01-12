@@ -5,9 +5,11 @@
     <title>JSP - Hello World</title>
 </head>
 <body>
-<h1><%= "Hello World!" %>
-</h1>
-<br/>
-<a href="hello-servlet">Hello Servlet</a>
+<form action="test1" method="post">
+    age: &nbsp <input type="text" name="age">
+    <br>
+    grade: &nbsp <input type="text" name="grade">
+    <button>点击提交</button>
+</form>
 </body>
 </html>

@@ -143,8 +143,13 @@ version：依赖的版本号。例如 8.0.34。-->
 </configuration>
 ```
 
-
 ## 创建实体类
+
+**如果实体类的属性名与数据库表的字段名一致，MyBatis 可以自动完成映射，无需额外配置。**
+
+额外配置见下方
+
+
 
 ~~~java
 package com.senjay.Mybatis.pojo;public class User {
@@ -153,6 +158,7 @@ package com.senjay.Mybatis.pojo;public class User {
     private String name;
     private int age;
     // 要有顺序之分吗！
+    // 不需要。 MyBatis 是通过属性名与字段名的映射关系来赋值，与属性的定义顺序无关。
     private char gender;
 
     public User(int age, int id, String name, char gender) {
@@ -230,7 +236,7 @@ public interface UserMapper {
 }
 
 ```
-## 创建MyBatis的==映射文件==
+## 创建MyBatis的==映射文件== （对应mapper接口的xml文件）
 
 创建实体类 mapper接口 创建mapper的映射文件
 
@@ -257,21 +263,26 @@ mapper映射文件要和mapper接口文件名一样
 | 属性 | 字段/列 |
 | 对象 | 记录/行 |
 
+==每一个实体类实例化的对象都是表中每行的数据==
+
+
+
 - 映射文件的命名规则
-	- 表所对应的实体类的类名+Mapper.xml
-	- 例如：表t_user，映射的实体类为User，所对应的映射文件为UserMapper.xml 
-	- 因此一个映射文件对应一个实体类，对应一张表的操作
-	- MyBatis映射文件用于编写SQL，访问以及操作表中的数据
-	- MyBatis映射文件存放的位置是src/main/resources/mappers目录下
+ - 表所对应的实体类的类名+Mapper.xml
+  - 例如：表t_user，映射的实体类为User，所对应的映射文件为UserMapper.xml 
+  - **因此一个映射文件对应一个实体类，对应一张表的操作**
+  - MyBatis映射文件用于编写SQL，访问以及操作表中的数据
+  - MyBatis映射文件存放的位置是src/main/resources/mappers目录下
 - MyBatis中可以面向接口操作数据，要保证两个一致
-	- mapper接口的全类名和映射文件的命名空间（namespace）保持一致
-	- mapper接口中方法的方法名和映射文件中编写SQL的标签的id属性保持一致
+ - mapper接口的全类名和映射文件的命名空间（namespace）保持一致
+  - mapper接口中方法的方法名和映射文件中编写SQL的标签的id属性保持一致
+
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>  
 <!DOCTYPE mapper  
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
-<mapper namespace="com.atguigu.mybatis.mapper.UserMapper">  
+<mapper namespace="com.atguigu.mybatis.mapper.UserMapper">  <与mapper接口联系>
 	<!--int insertUser();-->  
 	<insert id="insertUser">  
 		insert into t_user values(null,'张三','123',23,'女')  
@@ -466,7 +477,7 @@ sum:一一对应的映射关系
 
 **实体类用于接收表数据（映射）**
 
-封装SqlSessionUtils类 里面提供众多方法中的一个获取session
+**封装SqlSessionUtils类** 里面提供众多方法中的一个获取session
 
 
 
@@ -501,6 +512,7 @@ public class TestMapper { // 类名不能是Test 这样会与关键字冲突
         // 通用
         // 获取接口的实现类
         UserMapper userMapper = session.getMapper(UserMapper.class);
+        --------------------------------------------------------------
 //        userMapper.insertUser();
 //        userMapper.deleteUser();
 //        userMapper.updateUser(); 提供了接口方法使用sql语句操作数据库
@@ -581,10 +593,12 @@ public interface UserMapper {
 	```
 - 注意：
 
-	1. 查询的标签select必须设置属性resultType或resultMap，用于设置实体类和数据库表的映射关系  
-		- resultType：自动映射，用于属性名和表中字段名一致的情况  
-		- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
-	2. 当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
+```ceylon
+1. 查询的标签select必须设置属性resultType或resultMap，用于设置实体类和数据库表的映射关系  
+	- resultType：自动映射，用于属性名和表中字段名一致的情况  
+	- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
+2. 当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
+```
 ```sql
 CREATE TABLE user (
     user_id INT PRIMARY KEY,
@@ -648,7 +662,7 @@ public class Order {
 
 **以便查询到的结果用==实现类==存储**
 
-~~~java
+~~~xml
 <resultMap id="userWithOrdersMap" type="com.example.User">
 定义了一个 resultMap，ID 为 "userWithOrdersMap"
 指定了映射的目标类型为 com.example.User
@@ -686,14 +700,6 @@ public class Order {
 
 
 
-### java8 特性 lambda表达式
-
-
-
-
-
-
-
 
 
 [查看模板根代码](https://github.com/kasahuki/Backend/tree/main/JavaSE/Projectrs/MybatisStandardTemplateTest)
@@ -702,17 +708,17 @@ public class Order {
 
 # MyBatis获取参数值的两种方式（重点）
 
-- MyBatis获取参数值的两种方式：${}和#{}  
+- MyBatis获取参数值的两种方式：${}==(这个和js模板字符串类似)==和#{}  
 - ${}的本质就是**字符串拼接**(==要加引号==)，#{}的本质就是占位符赋值  
 
 ## 字符串拼接容易引发sql 注入
 
 **本质sql 语句就是String字符串所以 就利用了Java字符串的拼接**
 
-- ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以自动添加单引号
+- ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以**自动添加单引号**
 
 ## 单个字面量类型的参数
-- 若mapper接口中的方法参数为单个的字面量类型，此时可以使用\${}和#{}以任意的名称（最好见名识意）获取参数的值，注意${}需要手动加单引号
+- 若mapper接口中的方法参数为单个的字面量类型，此时可以使用\${}和#{}以任意的名称（最好见名识意）获取参数的值，注意${}需要==**手动加单引号**==
 ```xml
 <!--User getUserByUsername(String username);-->
 <select id="getUserByUsername" resultType="User">
@@ -745,7 +751,7 @@ public class Order {
 </select>
 ```
 ## map集合类型的参数
-- 若mapper接口中的方法需要的参数为多个时，此时可以手动创建map集合，将这些数据放在map中只需要通过\${}和#{}访问map集合的键就可以获取相对应的值，注意${}需要手动加单引号
+- 若mapper接口中的方法需要的参数为多个时，此时可以手动创建map集合，将这些数据放在map中只需要通过\${}和#{}访问map集合的==键==（map中键不可重复！！！！）就可以获取相对应的值，注意${}需要手动加单引号
 ```xml
 <!--User checkLoginByMap(Map<String,Object> map);-->
 <select id="checkLoginByMap" resultType="User">
@@ -808,7 +814,7 @@ public void checkLoginByParam() {
 - 建议分成两种情况进行处理
 
 	1. 实体类类型的参数
-	2. 使用@Param标识参数
+	2. 使用@Param标识参数 （多个简单类型作为参数）
 1. MyBatis XML映射文件示例：
 
 
@@ -834,6 +840,7 @@ public User someMethod(@Param("paramName") String differentName);
 ```xml
 <select id="someMethod" resultType="User">
     SELECT * FROM users WHERE name = #{paramName}
+    当然是使用参数别名了
 </select>
 ```
 
@@ -865,6 +872,18 @@ public User getUserByNameAndAge(@Param("name") String name, @Param("age") int us
 
 
 # MyBatis的各种查询功能
+
+
+
+==key:==
+
+**resultType 的值就是查询的每一行数据都会被封装成这个类型**
+
+**总的返回值就是接口的方法返回类型**
+
+---
+
+
 
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收
@@ -956,7 +975,7 @@ Map<String, Object> getUserToMap(@Param("id") int id);
 List<Map<String, Object>> getAllUserToMap();
 ```
 ```xml
-<!--Map<String, Object> getAllUserToMap();-->  
+
 <select id="getAllUserToMap" resultType="map">  
 	select * from t_user  
 </select>
@@ -996,7 +1015,21 @@ Map<String, Object> getAllUserToMap();
 	}
 -->
 ```
+1. **方法一（`List<Map<String, Object>>`）更常用**：
+   - 适用于大多数查询场景，尤其是需要返回列表数据的场景。
+   - 简单、灵活，适合快速开发和动态字段查询。
+2. **方法二（`@MapKey` + `Map<String, Object>`）适用于特定场景**：
+   - 当查询结果需要按某个字段（如主键）索引时使用。
+   - 适合需要快速查找或分组的场景。
+
+---
+
+
+
 # 特殊SQL的执行
+
+**可能存在必须使用${}的情况**
+
 ## 模糊查询
 ```java
 /**
@@ -1016,8 +1049,42 @@ List<User> getUserByLike(@Param("username") String username);
 </select>
 ```
 - 其中`select * from t_user where username like "%"#{mohu}"%"`是最常用的
-## 批量删除
-- 只能使用\${}，如果使用#{}，则解析后的sql语句为`delete from t_user where id in ('1,2,3')`，这样是将`1,2,3`看做是一个整体，只有id为`1,2,3`的数据会被删除。正确的语句应该是`delete from t_user where id in (1,2,3)`，或者`delete from t_user where id in ('1','2','3')`
+
+
+
+## 批量删除 
+
+
+
+- `#{}` 会将参数值作为预编译参数传递给 SQL，生成类似以下语句：
+
+  
+
+  ```sql
+  delete from t_user where id in (?)
+  ```
+
+  这里的 `?` 是一个占位符，MyBatis 会将 `ids` 作为一个整体参数传递给 SQL。
+
+- 如果 `ids` 是 `"1,2,3"`，生成的 SQL 会是：
+
+  ```sql
+  delete from t_user where id in ('1,2,3')
+  ```
+
+  这会导致 SQL 语法错误，因为 `in` 语句需要的是多个值，而不是一个字符串。
+
+  ---
+
+  
+
+- 只能使用**\${}**  ==这个本质就是拼接字符串了 将字符串的内容也就是引号中的东西拼接到sql语句中==，如果使用#{}，则解析后的sql语句为`delete from t_user where id in ('1,2,3')`，这样是将`1,2,3`看做是一个整体，只有id为`1,2,3`的数据会被删除。正确的语句应该是`delete from t_user where id in (1,2,3)`，或者`delete from t_user where id in ('1','2','3')`
+- ![image-20250112142620269](C:/Users/33813/AppData/Roaming/Typora/typora-user-images/image-20250112142620269.png)
+
+这样不加引号是可以的 因为就是属于sql语句的一部分
+
+![image-20250112143316758](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250112143316758.png)
+
 ```java
 /**
  * 根据id批量删除
@@ -1108,8 +1175,15 @@ public void insertUser() {
 			- property：设置映射关系中实体类中的属性名  
 			- column：设置映射关系中表中的字段名
 - 若字段名和实体类中的属性名不一致，则可以通过resultMap设置自定义映射，即使字段名和属性名一致的属性也要映射，也就是全部属性都要列出来
+
+**resultmap就是建立实体类和表的映射关系**
+
 ```xml
-<resultMap id="empResultMap" type="Emp">
+<resultMap id="empResultMap" type="Emp"> 
+    <!-- 
+	id为唯一标识不能重复  id设定主键元素  result设定普通字段元素
+    type = 处理的实体类   
+ 	-->
 	<id property="eid" column="eid"></id>
 	<result property="empName" column="emp_name"></result>
 	<result property="age" column="age"></result>
@@ -1121,22 +1195,28 @@ public void insertUser() {
 	select * from t_emp
 </select>
 ```
-- 若字段名和实体类中的属性名不一致，但是字段名符合数据库的规则（使用_），实体类中的属性名符合Java的规则（使用驼峰）。此时也可通过以下两种方式处理字段名和实体类中的属性的映射关系  
+- 若字段名和实体类中的属性名不一致，但是**字段名符合数据库的规则（使用_）**，**实体类中的属性名符合Java的规则（使用驼峰）**。此时也可通过以下两种方式处理字段名和实体类中的属性的映射关系  
 
-	1. 可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  
-		```xml
-		<!--List<Emp> getAllEmp();-->
-		<select id="getAllEmp" resultType="Emp">
-			select eid,emp_name empName,age,sex,email from t_emp
-		</select>
-		```
-	2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
-		```xml
-	<settings>
-	    <setting name="mapUnderscoreToCamelCase" value="true"/>
-	</settings>
-		```
-## 多对一映射处理
+~~~xml
+1. 可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  
+	```xml
+	<!--List<Emp> getAllEmp();-->
+	<select id="getAllEmp" resultType="Emp">
+		select eid,emp_name empName,age,sex,email from t_emp
+	</select>
+	```
+2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
+	```xml
+<settings>
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+</settings>
+	```
+~~~
+
+**link to sql多表联查**
+
+## ==多对一映射处理==
+
 >查询员工信息以及员工所对应的部门信息
 ```java
 public class Emp {  
@@ -1240,7 +1320,7 @@ Dept getEmpAndDeptByStepTwo(@Param("did") Integer did);
 	select * from t_dept where did = #{did}
 </select>
 ```
-## 一对多映射处理
+## ==一对多映射处理==
 ```java
 public class Dept {
     private Integer did;
@@ -1349,25 +1429,27 @@ public void getEmpAndDeptByStepOne() {
 - 开启后，需要用到查询dept的时候才会调用相应的SQL语句![](Resources/延迟加载测试3.png)
 - fetchType：当开启了全局的延迟加载之后，可以通过该属性手动控制延迟加载的效果，fetchType="lazy(延迟加载)|eager(立即加载)"
 
-	```xml
-	<resultMap id="empAndDeptByStepResultMap" type="Emp">
-		<id property="eid" column="eid"></id>
-		<result property="empName" column="emp_name"></result>
-		<result property="age" column="age"></result>
-		<result property="sex" column="sex"></result>
-		<result property="email" column="email"></result>
-		<association property="dept"
-					 select="com.atguigu.mybatis.mapper.DeptMapper.getEmpAndDeptByStepTwo"
-					 column="did"
-					 fetchType="lazy"></association>
-	</resultMap>
-	```
+~~~xml
+```xml
+<resultMap id="empAndDeptByStepResultMap" type="Emp">
+	<id property="eid" column="eid"></id>
+	<result property="empName" column="emp_name"></result>
+	<result property="age" column="age"></result>
+	<result property="sex" column="sex"></result>
+	<result property="email" column="email"></result>
+	<association property="dept"
+				 select="com.atguigu.mybatis.mapper.DeptMapper.getEmpAndDeptByStepTwo"
+				 column="did"
+				 fetchType="lazy"></association>
+</resultMap>
+```
+~~~
 # 动态SQL
-- Mybatis框架的动态SQL技术是一种根据特定条件动态拼装SQL语句的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
-## if
+- Mybatis框架的动态SQL技术是一种**根据特定条件动态拼装SQL语句**的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
+## if （sql多加恒成立条件 1==1 ）
 - if标签可通过test属性（即传递过来的数据）的表达式进行判断，若表达式的结果为true，则标签中的内容会执行；反之标签中的内容不会执行
 - 在where后面添加一个恒成立条件`1=1`
-	- 这个恒成立条件并不会影响查询的结果
+	- 这个**恒成立条件**并不会影响查询的结果
 	- 这个`1=1`可以用来拼接`and`语句，例如：当empName为null时
 		- 如果不加上恒成立条件，则SQL语句为`select * from t_emp where and age = ? and sex = ? and email = ?`，此时`where`会与`and`连用，SQL语句会报错
 		- 如果加上一个恒成立条件，则SQL语句为`select * from t_emp where 1= 1 and age = ? and sex = ? and email = ?`，此时不报错
@@ -1389,7 +1471,7 @@ public void getEmpAndDeptByStepOne() {
 	</if>
 </select>
 ```
-## where
+## where （只可去前面多余的and/or）
 - where和if一般结合使用：
 	- 若where标签中的if条件都不满足，则where标签没有任何功能，即不会添加where关键字  
 	- 若where标签中的if条件满足，则where标签会自动添加where关键字，并将条件最前方多余的and/or去掉  
@@ -1415,27 +1497,29 @@ public void getEmpAndDeptByStepOne() {
 ```
 - 注意：where标签不能去掉条件后多余的and/or
 
-	```xml
-	<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
-	<if test="empName != null and empName !=''">
-	emp_name = #{empName} and
-	</if>
-	<if test="age != null and age !=''">
-		age = #{age}
-	</if>
-	```
+~~~xml
+```xml
+<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
+<if test="empName != null and empName !=''">
+emp_name = #{empName} and
+</if>
+<if test="age != null and age !=''">
+	age = #{age}
+</if>
+```
+~~~
 ## trim
 - trim用于去掉或添加标签中的内容  
 - 常用属性
-	- prefix：在trim标签中的内容的前面添加某些内容  
-	- suffix：在trim标签中的内容的后面添加某些内容 
-	- prefixOverrides：在trim标签中的内容的前面去掉某些内容  
-	- suffixOverrides：在trim标签中的内容的后面去掉某些内容
-- 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
+- prefix：在trim标签中的内容的前面==添加==某些内容  
+- suffix：在trim标签中的内容的后面==添加==某些内容 
+  - prefixOverrides：在trim标签中的内容的前面==去掉==某些内容  
+  - suffixOverrides：在trim标签中的内容的后面==去掉==某些内容
+- 若trim中的标签==**都不满足条件**==，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
 ```xml
 <!--List<Emp> getEmpByCondition(Emp emp);-->
 <select id="getEmpByCondition" resultType="Emp">
-	select * from t_emp
+	select * from t_emp·	
 	<trim prefix="where" suffixOverrides="and|or">
 		<if test="empName != null and empName !=''">
 			emp_name = #{empName} and
@@ -1462,10 +1546,14 @@ public void getEmpByCondition() {
 	System.out.println(emps);
 }
 ```
-![](Resources/trim测试结果.png)
 ## choose、when、otherwise
 - `choose、when、otherwise`相当于`if...else if..else`
 - when至少要有一个，otherwise至多只有一个
+
+when相当于就是else if choose 只能选一个结果
+
+
+
 ```xml
 <select id="getEmpByChoose" resultType="Emp">
 	select * from t_emp
@@ -1499,62 +1587,74 @@ public void getEmpByChoose() {
 	System.out.println(emps);
 }
 ```
-![](Resources/choose测试结果.png)
+
 - 相当于`if a else if b else if c else d`，只会执行其中一个
 ## foreach
 - 属性：  
-	- collection：设置要循环的数组或集合  
-	- item：表示集合或数组中的每一个数据  
-	- separator：设置循环体之间的分隔符，分隔符前后默认有一个空格，如` , `
-	- open：设置foreach标签中的内容的开始符  
-	- close：设置foreach标签中的内容的结束符
+
+  collection：设置要循环的数组或集合  
+
+  item：表示集合或数组中的每一个数据  
+
+  separator：设置循环体之间的分隔符，分隔符前后默认有一个空格，如` , `
+
+  open：设置foreach标签中的内容的开始符  
+
+  close：设置foreach标签中的内容的结束符
+
+  **（separator  open close 都是自己定义的 根据sql语句的语法格式）**
+
 - 批量删除
 
-	```xml
-	<!--int deleteMoreByArray(Integer[] eids);-->
-	<delete id="deleteMoreByArray">
-		delete from t_emp where eid in
-		<foreach collection="eids" item="eid" separator="," open="(" close=")">
-			#{eid}
-		</foreach>
-	</delete>
-	```
-	```java
-	@Test
-	public void deleteMoreByArray() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		int result = mapper.deleteMoreByArray(new Integer[]{6, 7, 8, 9});
-		System.out.println(result);
-	}
-	```
-	![](Resources/foreach测试结果1.png)
-- 批量添加
+- foreach就是批量遍历处理厂数据罢了
 
-	```xml
-	<!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
-	<insert id="insertMoreByList">
-		insert into t_emp values
-		<foreach collection="emps" item="emp" separator=",">
-			(null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
-		</foreach>
-	</insert>
-	```
-	```java
-	@Test
-	public void insertMoreByList() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		Emp emp1 = new Emp(null,"a",1,"男","123@321.com",null);
-		Emp emp2 = new Emp(null,"b",1,"男","123@321.com",null);
-		Emp emp3 = new Emp(null,"c",1,"男","123@321.com",null);
-		List<Emp> emps = Arrays.asList(emp1, emp2, emp3);
-		int result = mapper.insertMoreByList(emps);
-		System.out.println(result);
-	}
-	```
-	![](Resources/foreach测试结果2.png)
-## SQL片段
+~~~xml
+```xml
+<!--int deleteMoreByArray(Integer[] eids);-->
+<delete id="deleteMoreByArray">
+	delete from t_emp where eid in
+	<foreach collection="eids" item="eid" separator="," open="(" close=")"> 
+		#{eid}
+	</foreach>
+</delete>
+```
+```java
+@Test
+public void deleteMoreByArray() {
+	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
+	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+	int result = mapper.deleteMoreByArray(new Integer[]{6, 7, 8, 9});
+	System.out.println(result);
+}
+```
+~~~
+批量添加
+
+~~~xml
+```xml
+<!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
+<insert id="insertMoreByList">
+	insert into t_emp values
+	<foreach collection="emps" item="emp" separator=",">
+		(null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
+	</foreach>
+</insert>
+```
+```java
+@Test
+public void insertMoreByList() {
+	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
+	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+	Emp emp1 = new Emp(null,"a",1,"男","123@321.com",null);
+	Emp emp2 = new Emp(null,"b",1,"男","123@321.com",null);
+	Emp emp3 = new Emp(null,"c",1,"男","123@321.com",null);
+	List<Emp> emps = Arrays.asList(emp1, emp2, emp3);
+	int result = mapper.insertMoreByList(emps);
+	System.out.println(result);
+}
+```
+~~~
+## SQL片段 （定义sql语句的模板 要用直接引入使用）
 - sql片段，可以记录一段公共sql片段，在使用的地方通过include标签进行引入
 - 声明sql片段：`<sql>`标签
 ```xml
@@ -1567,7 +1667,21 @@ public void getEmpByChoose() {
 	select <include refid="empColumns"></include> from t_emp
 </select>
 ```
+
+
+
+---
+
+
+
+# Mybatis Plus
+
+## 各种QueryWrapper如何去使用
+
+
+
 # MyBatis的缓存
+
 ## MyBatis的一级缓存
 - 一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问  
 - 使一级缓存失效的四种情况：  
