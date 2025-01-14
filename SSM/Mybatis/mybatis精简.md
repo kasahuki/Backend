@@ -170,3 +170,132 @@ resultType = _integer /实体类/map
 - 批量删除
 
 - foreach就是批量遍历处理厂数据罢了
+
+
+
+
+
+---
+
+
+
+
+
+## MyBatis 支持两种方式来定义 SQL 语句和映射关系：
+
+1. **XML 映射文件**（传统方式）
+2. **注解**（简化方式）
+
+### **XML 映射文件的方式**
+
+这是 MyBatis 最经典的使用方式。你需要编写一个 XML 文件来定义 SQL 语句和结果映射。
+
+#### （1）Mapper 接口
+
+
+
+```java
+public interface UserMapper {
+    User findById(int id);
+    void save(User user);
+    void update(User user);
+    void delete(int id);
+}
+```
+
+#### （2）XML 映射文件（UserMapper.xml）
+
+
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.UserMapper">
+    <!-- 根据 ID 查询用户 -->
+    <select id="findById" resultType="com.example.User">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="save">
+        INSERT INTO users (name, email) VALUES (#{name}, #{email})
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="update">
+        UPDATE users SET name = #{name}, email = #{email} WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="delete">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+</mapper>
+```
+
+
+
+
+
+#### （3）MyBatis 配置文件
+
+在 MyBatis 的全局配置文件中，加载 Mapper 的 XML 文件：
+
+
+
+```xml
+<configuration>
+    <mappers>
+        <mapper resource="com/example/UserMapper.xml"/>
+    </mappers>
+</configuration>
+```
+
+
+
+
+
+------
+
+###  **注解的方式**
+
+MyBatis 也支持通过注解直接在 Mapper 接口中定义 SQL 语句，而不需要额外的 XML 文件。
+
+#### （1）Mapper 接口（使用注解）
+
+
+
+```java
+import org.apache.ibatis.annotations.*;
+
+public interface UserMapper {
+    @Select("SELECT * FROM users WHERE id = #{id}")
+    User findById(int id);
+
+    @Insert("INSERT INTO users (name, email) VALUES (#{name}, #{email})")
+    void save(User user);
+
+    @Update("UPDATE users SET name = #{name}, email = #{email} WHERE id = #{id}")
+    void update(User user);
+
+    @Delete("DELETE FROM users WHERE id = #{id}")
+    void delete(int id);
+}
+```
+
+#### （2）MyBatis 配置文件
+
+在 MyBatis 的全局配置文件中，直接加载 Mapper 接口：
+
+
+
+```xml
+<configuration>
+    <mappers>
+        <mapper class="com.example.UserMapper"/>
+    </mappers>
+</configuration>
+```
