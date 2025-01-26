@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.senjay.mybatis.mappers.UserMapper">
+<!--    命名空间 肯定要和接口绑定映射-->
+  <select id="selectUserById" resultType="net.senjay.mybatis.pojo.User">
+      select * from test2 where id='${id}';
+  </select>
+
+    <select id="selectAllUser" resultType="net.senjay.mybatis.pojo.User">
+        select * from test2 where id>2;
+    </select>
+    <select id="selectUserByNameAndId" resultType="net.senjay.mybatis.pojo.User">
+        select * from test2 where id=#{id} and name=#{name};
+    </select>
+<!--在映射文件里书写sql语句-->
+
+</mapper>

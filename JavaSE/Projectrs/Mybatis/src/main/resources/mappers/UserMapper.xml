@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.senjay.Mybatis.mapper.UserMapper">
+<!--    <select id="selectBlog" resultType="Blog">-->
+<!--        select * from Blog where id = #{id}-->
+<!--    </select>-->
+        <insert id="insertUser">
+            insert into test2 values(null,'senjay',20,'男');
+        </insert>
+        <delete id="deleteUser">
+            delete from test2 where name = 'wushengjie';
+        </delete>
+
+        <update id="updateUser">
+            update test2 set name = 'Attavoy' where name = 'Senjay';
+        </update>
+    
+    <select id="selectUser" resultType="com.senjay.Mybatis.pojo.User">
+        select * from test2 where id = 2;
+<!--        跳转到数据库终端执行 将结果返回到实体类中也就是映射 （表字段column 类属性properties）名字要一一对应不然就去手动映射-->
+    </select>
+    <select id ="selectAllUser" resultType="com.senjay.Mybatis.pojo.User">
+        select * from test2 where id >2;
+    </select>
+
+
+</mapper>
