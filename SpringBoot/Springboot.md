@@ -2218,7 +2218,7 @@ public class FileUploadController {
 
 ## Redis
 
-**问题：**修改密码时然后重新登录会获取一个新的token 但是此时的旧token并没有销毁 所以使用旧令牌还是可以正常通过拦截器 ！！
+**问题：**修改密码时然后重新登录会获取一个新的token 但是此时的旧token并没有销毁（如果还没有过期的话） 所以使用旧令牌还是可以正常通过拦截器 ！！
 
 ![image-20250121120933738](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250121120933738.png)
 
@@ -2366,10 +2366,12 @@ application-prod.yml：生产环境
 - **用途**：用于发送 POST 请求，通常用于提交数据。
 - **参数**：
   - **URL**：请求的地址。
-  - **data**（可选）：请求体数据。 **`POST` 方法的第二个参数（即请求体数据 `data`）的默认格式是 JSON 格式**
+  - **data**（可选）：==请求体数据==。 **`POST` 方法的第二个参数（即请求体数据 `data`）的默认格式是 JSON 格式**
   - **config**（可选）：配置对象，可以包含 ``params`、`headers`` 等。
 
+POST 请求的第二个参数通常是请求体（Request Body），但请求体的格式可能有所不同，具体取决于 **`Content-Type` 和请求的具体内容**。根据请求的类型，Spring 会选择不同的方式来解析请求体。在文件上传和普通 JSON 请求之间有一个很重要的区别。
 
+至于content-type 如果没有设置的话默认就是根据数据类型
 
 params 就是==查询参数== 也就是**queryString**
 
