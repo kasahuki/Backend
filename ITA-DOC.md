@@ -2206,3 +2206,208 @@ public class HttpClientUtil {
 
 ~~~
 
+# 用户线程问题
+
+## 单例和多例
+
+1. **单例（Singleton）**
+
+(1) **定义**
+
+- **单例** 是指在整个应用程序中，**某个类只有一个实例**，所有地方都共享这个实例。
+- **作用域**：全局共享。
+
+(2) **适用场景**
+
+- 需要全局共享的资源，如数据库连接池、配置管理器、日志工具等。
+
+  ```java
+  public class DatabaseConnection {
+      private static DatabaseConnection instance = new DatabaseConnection();
+  
+      private DatabaseConnection() {} // 私有构造方法
+  
+      public static DatabaseConnection getInstance() {
+          return instance;
+      }
+  }
+  ```
+
+  - 无论调用多少次 `getInstance()`，返回的都是同一个 `DatabaseConnection` 实例。
+
+(3) **线程安全问题**
+
+- 单例对象可能被多个线程同时访问，需确保线程安全（如使用双重检查锁、枚举单例等）。
+
+
+
+---
+
+
+
+2. **多例（Multiton）**
+
+(1) **定义**
+
+- **多例** 是指某个类可以有 **多个实例**，但实例的数量是有限的，通常通过某种机制（如缓存、池化）管理。
+- **作用域**：有限共享。
+
+(2) **适用场景**
+
+- 需要管理多个相似但独立的资源，如线程池、对象池等。
+
+  
+
+  ```java
+  public class ThreadPool {
+      private static Map<String, ThreadPool> instances = new HashMap<>();
+  
+      private ThreadPool() {} // 私有构造方法
+  
+      public static ThreadPool getInstance(String key) {
+          if (!instances.containsKey(key)) {
+              instances.put(key, new ThreadPool());
+          }
+          return instances.get(key);
+      }
+  }
+  ```
+
+  - 根据不同的 `key` 返回不同的 `ThreadPool` 实例。
+
+
+
+| 特性             | 堆内存（Heap）               | 栈内存（Stack）                    |
+| :--------------- | :--------------------------- | :--------------------------------- |
+| **共享性**       | 所有线程共享                 | 线程私有                           |
+| **存储内容**     | 对象实例、数组、静态变量等   | 局部变量、方法参数、方法调用栈帧等 |
+| **生命周期**     | 由垃圾回收器管理             | 随方法调用和返回动态分配和释放     |
+| **线程安全问题** | 需要同步控制（如锁、原子类） | 天然线程安全                       |
+| **性能**         | 分配和回收较慢               | 分配和释放较快                     |
+
+~~~java
+@RestController
+public class UserController {
+    @PostMapping("/user")
+    public ResponseEntity<String> createUser(@RequestBody User user) { 
+        // 处理 user 对象...
+        return ResponseEntity.ok("Success");
+    }
+}
+~~~
+
+
+
+Spring 的 `@RequestBody` 机制在每次请求时，通过 `HttpMessageConverter`（如 `MappingJackson2HttpMessageConverter`）动态创建新的对象并填充数据。该对象的生命周期仅限于当前请求的处理过程。
+
+每个 HTTP 请求会触发一次 `createUser` 方法调用，Spring 会为每个请求的 JSON 数据**反序列化生成一个新的 `User` 实例**。
+
+- **默认情况下，Spring 的控制器（如 `@RestController`）是单例的**：
+  这意味着整个应用程序中只有一个控制器实例，所有 HTTP 请求共享这个实例。
+- **成员变量属于单例对象**：
+  如果控制器中有成员变量（如 `private User user;`），那么这个变量会被所有请求共享，**多线程并发访问时会互相干扰**。
+
+
+
+
+
+
+
+
+
+### 错误使用成员变量
+
+```java
+@RestController
+public class UserController {
+    // 成员变量：被所有请求共享！
+    private User currentUser;
+
+    @PostMapping("/update")
+    public void updateUser(@RequestBody User user) {
+        this.currentUser = user; // 多线程同时执行时，currentUser 会被覆盖
+    }
+
+    @GetMapping("/info")
+    public User getUser() {
+        return currentUser; // 可能返回其他线程设置的脏数据
+    }
+}
+```
+
+#### 问题分析：
+
+1. **线程 1** 发送请求更新用户为 `Alice`，`currentUser = Alice`。
+2. **线程 2** 同时发送请求更新用户为 `Bob`，`currentUser = Bob`。
+3. **线程 1** 调用 `getUser()`，期望得到 `Alice`，实际返回 `Bob`。
+4. **数据混乱**：成员变量 `currentUser` 被多个线程共享，导致状态不可控。
+
+------
+
+### **为什么“对象隔离”不成立？**
+
+(1) **误解的根源**
+
+许多开发者误以为“每个请求会创建新的控制器实例”，但 **Spring 默认是单例模式**，控制器实例只有一个，所有请求复用同一个实例。因此，成员变量天然共享。
+
+(2) **方法参数是隔离的，成员变量是共享的**
+
+- **方法参数（如 `@RequestBody User user`）**：
+  每次调用方法时，参数对象是独立的（Spring 为每个请求反序列化生成新对象）。
+- **成员变量（如 `private User currentUser`）**：
+  属于单例控制器的内部状态，所有线程共享同一份数据。
+
+---
+
+
+
+### **解决方案：如何正确使用==成员变量==？**
+
+#### (1) **完全避免使用成员变量（推荐）**
+
+将数据通过==方法参数传递==，或使用局部变量：
+
+```java
+@PostMapping("/safe")
+public ResponseEntity<String> safeMethod(@RequestBody User user) {
+    // 直接使用 user，无需成员变量
+    process(user);
+    return ResponseEntity.ok("Success");
+}
+```
+
+#### (2) **使用线程安全的成员变量**
+
+若必须使用成员变量，确保它是线程安全的：
+
+```java
+@RestController
+public class SafeController {
+    // 使用原子类保证线程安全
+    private AtomicInteger counter = new AtomicInteger(0);
+
+    @GetMapping("/count")
+    public int getCount() {
+        return counter.incrementAndGet(); // 原子操作
+    }
+}
+```
+
+#### (3) **修改控制器作用域为非单例（谨慎使用）**
+
+通过 `@Scope("prototype")` 让每次请求生成新控制器实例：
+
+```java
+@Scope("prototype")
+@RestController
+public class PrototypeController {
+    private User currentUser; // 每个请求的控制器实例独立，成员变量不共享
+
+    @PostMapping("/update")
+    public void updateUser(@RequestBody User user) {
+        this.currentUser = user; // 安全，但通常不推荐（性能差）
+    }
+}
+```
+
+- **代价**：频繁创建实例可能导致性能下降，通常不建议。
