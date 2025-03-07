@@ -1447,20 +1447,7 @@ public class AutoFillAspect {
 
 
 
-~~~java
-@Component
-@ConfigurationProperties(prefix = "sky.alioss")
-@Data
-public class AliOssProperties {
-
-    private String endpoint;
-    private String accessKeyId;
-    private String accessKeySecret;
-    private String bucketName;
-
-}
-
-~~~
+![image-20250308001044059](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308001044059.png)
 
 这段代码是 **Spring Boot 的配置类**，用于  **从 `application.properties` 或 `application.yml`** ==**读取**== **阿里云 OSS（Object Storage Service）** 的配置信息，并封装成 Java 对象。
 
@@ -1470,22 +1457,7 @@ public class AliOssProperties {
 
 里面的数据源啊或者其他配置可能不同环境不一样 所以这些不确定的就在主配置文件中引用其他环境的配置文件
 
-```yml
-spring:
-  profiles:
-    active: dev  // 在这里先指定引用的文件
-    
-    
-    
-    
-  alioss:
-   endPoint:${sky.alioss.endPoint}
-   access-key-id:${sky.alioss.access-key-id}
-   access-key-secret:${sky.alioss.access-key-secret}
-   bucket-name:${sky.alioss.bucket-name}  
-   
-   // 就用这种方式动态读取active值对应不同环境配置文件中的属性 
-```
+![image-20250308001031009](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308001031009.png)
 
 application-yml
 
@@ -1567,33 +1539,7 @@ public class DataSourceConfig {
 
 ---
 
-```java
-@Component
-@ConfigurationProperties(prefix = "sky.alioss")
-@Data
-public class AliOssProperties {
-
-    private String endpoint;
-    private String accessKeyId;
-    private String accessKeySecret;
-    private String bucketName;
-
-}
-
-// 配置类用于创建AliOssUtil对象
-@Configuration
-@Slf4j
-public class OssConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean
-    public AliOssUtil aliOssUtil(AliOssProperties aliOssProperties){
-        return new AliOssUtil(aliOssProperties.getEndpoint(),aliOssProperties.getAccessKeyId(),aliOssProperties.getAccessKeySecret(),aliOssProperties.getBucketName());
-    }
-    // 交给spring容器管理的同时初始化
-
-}
-```
+![image-20250308001148142](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308001148142.png)
 
 ~~~java
 @RestController
@@ -1636,8 +1582,8 @@ public class CommonController {
 public class AliOssUtil {
 
     private String endpoint;
-    private String accessKeyId;
-    private String accessKeySecret;
+    private String 进入密钥Id;
+    private String 进入密钥Secret;
     private String bucketName;
 
     /**
@@ -1650,7 +1596,7 @@ public class AliOssUtil {
     public String upload(byte[] bytes, String objectName) {
 
         // 创建OSSClient实例。
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, 进入密钥Id, 进入密钥Secret);
 
         try {
             // 创建PutObject请求。
@@ -2411,3 +2357,1158 @@ public class PrototypeController {
 ```
 
 - **代价**：频繁创建实例可能导致性能下降，通常不建议。
+
+
+
+
+
+# wechat小程序开发
+
+[开发文档](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+
+
+
+[小程序发布流程](https://mp.weixin.qq.com/wxamp/home/guide?lang=zh_CN&token=872076934)  填写小程序相关信息
+
+
+
+**上传开发版本--》备案--》审核中…… --》上线**
+
+## 微信登录的流程
+
+
+
+~~~yaml
+sky:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: itcast
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    admin-token-name: token
+
+    user-secret-key: itheima
+    user-ttl: 7200000
+    user-token-name: authentication #前端传递过来的令牌名称
+  alioss:
+    endPoint:${sky.alioss.endPoint}
+    access-key-id:${sky.alioss.access-key-id}
+    access-key-secret:${sky.alioss.access-key-secret}
+    bucket-name:${sky.alioss.bucket-name}
+
+  wechat:
+    appid:${sky.wechat.appid}
+    secret:${sky.wechat.secret}
+
+~~~
+
+
+
+~~~java
+package com.sky.properties;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = "sky.jwt")
+@Data
+public class JwtProperties {
+
+    /**
+     * 管理端员工生成jwt令牌相关配置
+     */
+    private String adminSecretKey;
+    private long adminTtl;
+    private String adminTokenName;
+
+    /**
+     * 用户端微信用户生成jwt令牌相关配置
+     */
+    private String userSecretKey;
+    private long userTtl;
+    private String userTokenName;
+
+}
+
+~~~
+
+
+
+
+
+基本插入
+
+~~~java
+ @Insert("insert into user (openid, name, phone, sex, id_number, avatar, create_time)" +
+            "values(#{openid}, #{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{createTime})" )
+    void insert(User user);
+~~~
+
+
+
+
+
+~~~java
+@Service
+public class UserServiceImpl implements UserService {
+    public static final String WX_LOGIN_URL = "https://api.weixin.qq.com/sns/jscode2session";
+    // 定义常量 就这个类用到就写本类里就好了
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private JwtProperties jwtProperties;
+    @Autowired
+    private WeChatProperties weChatProperties;
+    @Override
+    public UserLoginVO wxlogin(UserLoginDTO userLoginDTO) {
+
+
+        // 根据code 调用微信接口，获取微信用户信息
+        Map<String,String> map = new HashMap<>();
+        map.put("appid", weChatProperties.getAppid());
+        map.put("secret", weChatProperties.getSecret());
+        map.put("js_code", userLoginDTO.getCode());
+        map.put("grant_type", "authorization_code");
+        String json = HttpClientUtil.doGet(WX_LOGIN_URL, map); // HttpClient 类的实现
+        JSONObject jsonObject = JSON.parseObject(json); // 解析json 为json对象
+        String openid = jsonObject.getString("openid");
+        // 这里可以提取出一个方法
+        // 如果只有在这里有用就直接在这里写方法就行 如果很多地方都用到就提取封装工具类
+
+
+        if(openid == null)
+            throw new LoginFailedException(MessageConstant.LOGIN_FAILED); // 异常要精准切入要害 自定义异常
+
+        // 查询数据库 是否有这个用户 没有就创建这个用户
+        User user = userMapper.getByOpenid(openid);
+        if(user == null) {
+            // 新用户
+            user = User.builder()
+                    .openid(openid)
+                    .createTime(LocalDateTime.now())
+                    .build();
+            userMapper.insert(user);     // 方法取名
+            
+            // builer ~ build~
+        } else {
+            // 查到了用户
+        }
+        // 生成token  claims 存一些必要的数据解析出来有用的
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID, user.getId());
+        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+        // token 使用JWT 生成
+        UserLoginVO userLoginVO = UserLoginVO.builder()
+                .id(user.getId())
+                .openid(user.getOpenid())
+                .token(token)
+                .build();
+
+        return userLoginVO;
+
+    }
+
+}
+
+~~~
+
+
+
+配置**用户类接口**的**请求拦截器**：
+~~~java
+package com.sky.interceptor;
+/**
+ * jwt令牌校验的拦截器
+ */
+@Component
+@Slf4j
+public class JwtTokenUserInterceptor implements HandlerInterceptor {
+
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    /**
+     * 校验jwt
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        //判断当前拦截到的是Controller的方法还是其他资源 （如静态资源）
+        if (!(handler instanceof HandlerMethod)) {
+            //当前拦截到的不是动态方法，直接放行
+            return true;
+        }
+
+        //1、从请求头中获取令牌
+        String token = request.getHeader(jwtProperties.getUserTokenName());
+
+        //2、校验令牌
+        try {
+            log.info("jwt校验:{}", token);
+            Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
+            Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
+            log.info("当前用户id：", userId);
+            BaseContext.setCurrentId(userId);
+            //3、通过，放行
+            return true;
+        } catch (Exception ex) {
+            //4、不通过，响应401状态码
+            response.setStatus(401);
+            return false;
+        }
+    }
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        //清空当前线程中的数据
+        BaseContext.removeCurrentId();
+    }
+}
+
+~~~
+
+
+
+## Uniapp JSes6 异步编程
+
+### 根据分类id查询dish list
+
+~~~java
+    @Override
+    public List<Dish> list(Long categoryId) {
+        Dish dish = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE) // 要查询启售的菜品
+                .build();
+        return dishMapper.list(dish);
+    }
+~~~
+
+~~~xml
+	<select id="list" resultType="com.sky.entity.Dish">
+		select * from dish
+		<where>
+			<if test="name != null and name != ''">
+				and name like concat('%',#{name},'%')
+			</if>
+			<if test="categoryId != null">
+				and category_id = #{categoryId}
+			</if>
+			<if test="status != null">
+				and status = #{status}
+			</if>
+		</where>
+		order by create_time desc
+	</select>
+~~~
+
+## 分页查询套餐
+
+~~~java
+   @GetMapping("/page")
+    @ApiOperation("套餐分页查询")
+    public Result<PageResult> pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) {
+        // 使用特定自定义的DTO分页对象接收前端传过来的分页相关数据
+        // 返回自己封装的分页信息
+
+        PageResult pageResult =  setmealService.pageQuery(setmealPageQueryDTO);
+        return Result.success(pageResult);
+
+    }
+
+ @Override
+    public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) {
+        int pageNum = setmealPageQueryDTO.getPage();
+        int pageSize = setmealPageQueryDTO.getPageSize();
+        // 提取分页参数
+        PageHelper.startPage(pageNum, pageSize); // 利用分页参数 开启分页查询
+        
+        Page<SetmealVO> page = setmealMapper.pageQuery(setmealPageQueryDTO); // 查询分页数据
+        
+        PageResult pageResult = new PageResult(page.getTotal(), page.getResult()); // 封装返回信息
+        return pageResult;
+    }
+~~~
+
+
+
+### 分页数据库 多表查询
+
+~~~xml
+<!--	分页查询数据库操作！！！！-->
+	<select id="pageQuery" resultType="com.sky.vo.SetmealVO">
+		select s.*,c.name categoryName from setmeal s left join category c on s.category_id = c.id
+		<where>
+			<if test="name != null">
+				and s.name like concat('%',#{name},'%')
+			</if>
+			<if test="status != null">
+				and s.status = #{status}
+			</if>
+			<if test="categoryId != null">
+				and s.category_id = #{categoryId}
+			</if>
+		</where>
+		order by s.create_time desc
+	</select>
+~~~
+
+
+
+### 批量插入(新增套餐)
+
+获取主键的**回填**：
+
+~~~xml
+	<insert id="insert" parameterType="Setmeal" useGeneratedKeys="true" keyProperty="id">
+		insert into setmeal
+		(category_id, name, price, status, description, image, create_time, update_time, create_user, update_user)
+		values (#{categoryId}, #{name}, #{price}, #{status}, #{description}, #{image}, #{createTime}, #{updateTime},
+		#{createUser}, #{updateUser})
+	</insert>
+~~~
+
+
+
+
+
+
+
+~~~java
+    @Override
+    @Transactional
+    public void add(SetmealDTO setmealDTO) {
+
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal); // 拷贝信息
+
+        setmealMapper.insert(setmeal);
+
+        // 获取自增的套餐id
+        Long setmealId = setmeal.getId();
+
+        // 首先：提取出setmealDish
+        // 插入到setmealDish表
+        List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -> {
+            setmealDish.setSetmealId(setmealId);
+        });
+        setmealDishMapper.insertBatch(setmealDishes); // 批量插入
+
+
+    }
+~~~
+
+获取自增的主键回填要求 ： 这个键必须自增，要在mapper 映射文件中写 **useGeneratedKeys="true"**
+
+~~~xml
+<!--	批量插入-->
+	<insert id="insertBatch">
+		insert into setmeal_dish
+		(setmeal_id,dish_id,name,price,copies)
+		values
+		<foreach collection="setmealDishes" item="sd" separator=",">
+			(#{sd.setmealId},#{sd.dishId},#{sd.name},#{sd.price},#{sd.copies})
+		</foreach>
+	</insert>
+~~~
+
+
+
+### 删除套餐
+
+**业务规则：**
+
+- 可以一次删除一个套餐，也可以==批量==删除套餐
+- 起售中的套餐**不能删除**  过滤
+
+
+
+~~~java
+  @Override
+    @Transactional
+    public void deleteBatch(List<Long> ids) {
+        // 删除也得看套餐状态
+        // 过滤掉状态为1的套餐
+        ids.forEach(id -> {
+            Setmeal setmeal = setmealMapper.getById(id); // 根据id查询套餐
+            if(setmeal.getStatus() == StatusConstant.ENABLE) {
+                throw new DeletionNotAllowedException("套餐正在售卖中，无法删除");
+            }
+        });
+
+        // 正式删除 但是这里是循环 可以使用批量删除优化
+        ids.forEach(setmealId -> {
+            // 删除套餐的同时要想想还有没有数据表和这个套餐表关联呢 不然不删除导致有碎片
+            setmealMapper.deleteById(setmealId); // 删除这个套餐
+            setmealDishMapper.deleteBySetmealId(setmealId); // 删除这个套餐关联的所有菜品
+        });
+
+    }
+
+
+
+~~~
+
+
+
+
+
+### 修改套餐
+
+一般要根据id查询套餐详情信息 然后==回显==给用户
+
+#### 根据id查询
+
+~~~java
+  @Override
+    public SetmealDTO getById(Long id) {
+        Setmeal setmeal = setmealMapper.getById(id);
+        SetmealDTO setmealDTO = new SetmealDTO();
+        BeanUtils.copyProperties(setmeal, setmealDTO);
+        return setmealDTO;
+
+
+    }
+~~~
+
+
+
+#### 提交数据修改
+
+
+
+~~~java
+   @Override
+    public void update(SetmealDTO setmealDTO) {
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+        setmealMapper.update(setmeal);
+
+    }
+
+update id="update">
+		update setmeal
+		<set>
+			<if test="name != null">
+				name = #{name},
+			</if>
+			<if test="categoryId != null">
+				category_id = #{categoryId},
+			</if>
+			<if test="price != null">
+				price = #{price},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+			<if test="description != null">
+				description = #{description},
+			</if>
+			<if test="updateTime != null">
+				update_time = #{updateTime},
+			</if>
+			<if test="updateUser != null">
+				update_user = #{updateUser}
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+~~~
+
+更新 set标签 
+
+查询 where 标签
+
+
+
+
+
+
+
+
+
+---
+
+## 以下就是起售/停售问题
+
+## 业务关联分析
+
+菜品起售表示该菜品可以对外售卖，在用户端可以点餐，菜品停售表示此菜品下架，用户端无法点餐。
+
+业务规则为：**如果执行停售操作，则包含此菜品的套餐也需要停售。**  关联操作！！！
+
+
+
+**setmeal 表和setmealdish表的区别：前者是套餐表 后者是套餐和里面的菜品的关联表**
+
+
+
+模拟用户操作 业务逻辑场景分析
+
+**但是注意 ：** ！！！ 如果起售一个菜品 不能马上就起售这个套餐 万一这个套餐中有一个没有起售怎么办 ， 相反的如果停售一个菜品马上就要停售套餐
+
+​								  如果起售一个套餐 要判断套餐中是否有停售的商品
+
+​									如果停售一个套餐，不要停售菜品
+
+---
+
+
+
+
+
+### 套餐的起售/停售
+
+~~~java
+@Override
+    @Transactional
+    public void startOrStop(Integer status, Long id) {
+        // 判断套餐状态：
+        // on: 判断套餐中的菜品是否有停售菜品，如有则抛出异常
+
+        if (status == StatusConstant.ENABLE) {
+//            List<SetmealDish> setmealDishes = setmealDishMapper.getDishedById(id); // 根据套餐id查询套餐中的菜品
+//            setmealDishes.forEach(setmealDish -> {
+//                Integer dishStatus  = dishMapper.getById(setmealDish.getDishId()).getStatus();
+//                if(dishStatus == StatusConstant.DISABLE) {
+//                    throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+//                }
+//            });
+
+            List<Dish> dishList = dishMapper.getbySetmealId(id); // 多表联查
+            if (dishList != null && dishList.size() > 0) {
+                dishList.forEach(dish -> {
+                    if (StatusConstant.DISABLE == dish.getStatus()) {
+                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                    }
+                });
+            }
+        }
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        setmealMapper.update(setmeal); // 更新套餐状态
+        // 为什么菜品全部起售 套餐自动由原来的停售状态变为起售状态呢
+
+
+    }
+~~~
+
+<span style="color:#CC0000;">**问题TODO：      // 为什么菜品全部起售 套餐自动由原来的停售状态变为起售状态呢**</span>
+
+
+
+### SQL 查询语句解析
+
+```sql
+select a.* from dish a
+left join setmeal_dish b on a.id = b.dish_id
+where b.setmeal_id = #{setmealId}
+```
+
+- **`select a.\*`**: 查询 `dish` 表中的所有字段（`a.*`）。
+- **`from dish a`**: 从 `dish` 表中查询数据，并使用别名 `a`。
+- **`left join setmeal_dish b on a.id = b.dish_id`**: 使用左连接（`left join`）将 `dish` 表 (`a`) 与 `setmeal_dish` 表 (`b`) 关联。连接条件是 `a.id = b.dish_id`，即根据 `setmeal_dish` 表中的 `dish_id` 字段与 `dish` 表中的 `id` 字段进行关联。
+- **`where b.setmeal_id = #{setmealId}`**: 设置查询条件，只选择 `setmeal_dish` 表中 `setmeal_id` 等于传入的 `setmealId` 参数的记录。这样查询返回的是与指定 `setmealId` 相关联的所有 `dish` 数据。
+
+
+
+**多表联查回顾**
+
+
+
+
+
+
+
+---
+
+
+
+### 菜品的起售/停售
+
+菜品起售表示该菜品可以对外售卖，在用户端可以点餐，菜品停售表示此菜品下架，用户端无法点餐。
+
+业务规则为：如果执行停售操作，则包含此菜品的套餐也需要停售。
+
+~~~java
+  @Override
+    @Transactional
+    public void startOrStop(Integer status, Long id) {
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status)
+                .build();
+        dishMapper.update(dish);
+        // 先将菜品起售
+
+        if (status == StatusConstant.DISABLE) {
+            // 如果是停售操作，还需要将包含当前菜品的套餐也停售
+            List<Long> dishIds = new ArrayList<>();
+            dishIds.add(id);
+            // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
+            List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(dishIds);
+            // 根据菜品查找关联套餐
+            if (setmealIds != null && setmealIds.size() > 0) {
+                for (Long setmealId : setmealIds) {
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+                    setmealMapper.update(setmeal);
+                }
+            }
+        }
+    }
+~~~
+
+
+
+**参数是集合的查询**
+
+~~~xml
+<!--	涉及参数是批量的sql语句如何书写呢-->
+<!--	sql 原型语句 为 select setmeal_id from setmeal_dish where dish_id in (1,2,5,3,4,7) -->
+	<select id="getSetmealIDSByDishId" resultType="java.lang.Long">
+		select setmeal_id from setmeal_dish where dish_id in
+		<foreach collection="dishIds" item="dishId" separator="," open="(" close=")">
+			<!-- 开始遍历前加上个左括号 遍历结束后加上个右括号然后每个item使用separator作为分隔符-->
+			#{dishId}
+		</foreach>
+	</select>
+
+~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+
+
+
+
+## 动态条件查询
+
+![image-20250307095045926](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307095045926.png)
+
+
+
+**接口分类但是service层和mapper层都是共享的！**
+
+
+
+`uni.login()` 这个 API 里，并 **没有明确指定是“微信登录”还是其他登录**，因为它是一个 **通用的登录接口**。但是，不同的平台调用 `uni.login()` 时，**默认会使用该平台自身的登录方式**。
+
+
+
+
+
+### 重点
+
+**根据产品原型** 分析需求 然后再   **设计** ==数据库表==再 决定要有==几个接口==
+
+![image-20250307090805296](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307090805296.png)
+
+![image-20250307090800762](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307090800762.png)
+
+### 根据分类id查询菜品 并携带口味给前端
+
+**动态查询条件 动态sql**
+
+~~~java
+ @GetMapping("/list")
+    @ApiOperation("根据分类id查询菜品")
+    public Result<List<DishVO>> list(Long categoryId) {
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+
+        List<DishVO> list = dishService.listWithFlavor(dish);
+
+        return Result.success(list);
+    }
+~~~
+
+~~~java
+  public List<DishVO> listWithFlavor(Dish dish) { 
+      // 返回这个菜品列表并带有所有这些菜品的所有口味 
+      // 可以用dishVO来存储
+
+        List<Dish> dishList = dishMapper.list(dish);
+
+        List<DishVO> dishVOList = new ArrayList<>();
+
+        for (Dish d : dishList) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(d,dishVO);
+
+            //根据菜品id查询对应的口味
+            List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
+
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        }
+
+        return dishVOList;
+    }
+~~~
+
+
+
+
+
+### 根据分类id查询套餐
+
+**动态查询条件 动态sql**
+
+~~~java
+@GetMapping("/list")
+    @ApiOperation("根据分类id查询套餐")
+    public Result<List<Setmeal>> list(Long categoryId) {
+        Setmeal setmeal = Setmeal.builder()
+                .status(StatusConstant.ENABLE)
+                .categoryId(categoryId)
+                .build();
+        List<Setmeal> list = setmealService.list(setmeal);
+        return Result.success(list);
+    }
+
+   @Override
+    public List<Setmeal> list(Setmeal setmeal) {
+        return setmealMapper.list(setmeal);// 动态查询的做法 就是传入一个对象利用这个对象的属性动态条件查询这个对象
+    }
+
+   
+~~~
+
+
+
+~~~xml
+	<select id="list" resultType="com.sky.entity.Setmeal">
+		select * from setmeal
+		<where>
+			<if test="name !=null">
+				and name like concat('%',#{name},'%')
+			</if>
+			<if test="categoryId != null">
+				and category_id = #{categoryId}
+			</if>
+			<if test="status != null">
+				and status = #{}
+			</if>
+
+		</where>
+	</select>
+~~~
+
+
+
+### 根据套餐id查询响应的id
+
+~~~java
+  @GetMapping("/dish/{id}")
+    @ApiOperation("根据套餐id查询包含的菜品列表")
+    public Result<List<DishItemVO>> dishList(@PathVariable("id") Long id) {
+        List<DishItemVO> list = setmealService.getDishItemById(id);
+        return Result.success(list);
+    }
+
+   @Override
+    public List<DishItemVO> getDishItemById(Long id) {
+        return setmealMapper.getDishItemBySetmealId(id);
+    }
+~~~
+
+
+
+
+
+~~~java
+  @Select("select sd.name, sd.copies, d.image, d.description " +
+            "from setmeal_dish sd left join dish d on sd.dish_id = d.id " +
+            "where sd.setmeal_id = #{setmealId}")
+    List<DishItemVO> getDishItemBySetmealId(Long setmealId);
+    // 根据查询到的字段数选择对应的实体类封装
+}
+~~~
+
+
+
+# Redis 缓存优化
+
+![image-20250307211659797](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307211659797.png)
+
+## Redis 配置Bean
+
+
+
+![image-20250307231018480](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307231018480.png)
+
+### 	hash
+
+![image-20250307231338629](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307231338629.png)
+
+### String
+
+
+
+
+
+![image-20250307231219548](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307231219548.png)
+
+### List
+
+
+
+
+
+![image-20250307231546680](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250307231546680.png)
+
+### set
+
+
+
+![1741360483825](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1741360483825.png)
+
+### sorted_set
+
+
+
+![1741360502153](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1741360502153.png)
+
+### 通用命令
+
+
+
+![1741360536917](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1741360536917.png)
+
+~~~Java
+
+@Configuration
+@Slf4j
+public class RedisConfiguration {
+    @Bean
+    public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        log.info("开始创建 redis 模板对象...");
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+
+        // 设置 Redis 的连接工厂对象
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        // 设置 Key 的序列化器
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+        return redisTemplate;
+    }
+
+~~~
+
+
+
+**key 和value 都有序列化器** 
+
+**Value 的序列化方式没有手动指定**，那么它会使用 **默认的序列化方式**，即 `JdkSerializationRedisSerializer`。
+
+---
+
+| **特性**              | `StringRedisTemplate`          | 自定义的 `RedisTemplate<String, Object>`    |
+| :-------------------- | :----------------------------- | :------------------------------------------ |
+| **键类型**            | `String`                       | `String`                                    |
+| **值类型**            | `String`                       | `Object`（支持任意Java对象）                |
+| **值序列化方式**      | 字符串直接存储（无转换）       | JSON序列化（保留对象结构）                  |
+| **存储内容示例**      | `SET name "John"`              | `SET user:1001 "{'name':'Alice','age':30}"` |
+| **跨语言兼容性**      | 高（字符串通用）               | 高（JSON通用）                              |
+| **Java对象支持**      | 不支持（需手动序列化为String） | 直接支持（自动序列化/反序列化）             |
+| **Redis客户端可读性** | 高（纯字符串）                 | 高（JSON可读）                              |
+| **性能开销**          | 低（无序列化开销）             | 中（JSON序列化/反序列化消                   |
+
+## **为什么要给 Key 和 Value 设定序列化器？**
+在使用 Redis 时，**所有数据最终都会以**`字节数组（byte[]）`**的形式存储**。然而，在 Java 中，`RedisTemplate` 处理的数据是 Java 对象（如 `String`、`List`、`Map` 等）。为了让这些对象能够正确地存入 Redis，并能正确地取出解析，**需要一个序列化器来进行转换**。
+
+如果不指定序列化器，Spring Boot 默认会使用 `JdkSerializationRedisSerializer` 进行序列化，而它的存储格式是 **二进制数据**，可读性差，并且**只能在 Java 语言中解析**。所以，我们一般需要显式地指定更合适的序列化方式。
+
+---
+
+## **1. Key 需要 String 序列化的原因**
+在 Redis 中，**Key 本质上是字符串**，因此最好使用 `StringRedisSerializer` 来保证 Key 的可读性，否则会出现无法识别的问题。
+
+### **示例 1：不指定 Key 序列化器**
+如果不设置 Key 序列化器，默认使用 `JdkSerializationRedisSerializer`，存入 Redis 时会变成 **二进制格式**：
+```java
+redisTemplate.opsForValue().set("user:1", "张三");
+```
+实际存入 Redis 可能是：
+```
+\xac\xed\x00\x05t\x00\x06user:1
+```
+🔴 **问题**：
+- Key 变成了二进制，**无法在 `redis-cli` 或其他客户端中直接查询**。
+- 只能使用 `RedisTemplate` 进行查询，不能用 `get user:1` 直接获取数据。
+
+### **示例 2：正确设置 Key 序列化器**
+```java
+redisTemplate.setKeySerializer(new StringRedisSerializer());
+```
+这样存入 Redis 时：
+```
+user:1 -> "张三"
+```
+✅ **优点**：
+- Key 以**普通字符串格式存储**，可以直接在 Redis 客户端或命令行中查询。
+- 兼容不同的编程语言（Python、Node.js 也能正确访问）。
+
+---
+
+## **2. Value 需要设置合适的序列化器**
+**Value 需要序列化的原因**是：Java 的对象不能直接存入 Redis，需要转换成 `byte[]` 格式。因此，我们必须选择一种序列化方式。
+
+### **🔴 默认序列化（JdkSerializationRedisSerializer）**
+如果不手动指定 `Value` 的序列化方式，默认会使用 `JdkSerializationRedisSerializer`：
+```java
+redisTemplate.opsForValue().set("user", new User("张三", 20));
+```
+🔍 **Redis 实际存储的格式（不可读，二进制）**：
+```
+user -> \xac\xed\x00\x05t\x00\x0a张三
+```
+**问题：**
+1. **Redis 里存的是二进制，不可读** ❌
+2. **跨语言不兼容（Python/Node.js 无法解析）** ❌
+3. **存储占用大**（JDK 序列化冗余信息多） ❌
+
+---
+
+### **✅ 推荐：使用 `Jackson2JsonRedisSerializer` 让 Value 变成 JSON**
+如果你想让 Redis **存储可读的 JSON 格式**，可以使用 `Jackson2JsonRedisSerializer`：
+```java
+Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
+ObjectMapper objectMapper = new ObjectMapper();
+objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL);
+serializer.setObjectMapper(objectMapper);
+
+redisTemplate.setValueSerializer(serializer);
+```
+这样，Redis 里存的数据是：
+```json
+"user": {"name": "张三", "age": 20}
+```
+✅ **优点**：
+- **数据可读**，可以直接在 Redis 客户端看到 JSON。
+- **跨语言支持**，Python、Node.js 也能解析 JSON。
+- **占用存储小**，比 JDK 序列化方式节省空间。
+
+---
+
+## **3. 总结**
+| **序列化器**                      | **适用范围** | **存储格式** | **可读性** | **跨语言兼容** |
+| --------------------------------- | ------------ | ------------ | ---------- | -------------- |
+| `JdkSerializationRedisSerializer` | 默认         | 二进制       | ❌ 不可读   | ❌ 仅限 Java    |
+| `StringRedisSerializer`           | Key          | 普通字符串   | ✅ 可读     | ✅ 跨语言       |
+| `Jackson2JsonRedisSerializer`     | Value        | JSON         | ✅ 可读     | ✅ 跨语言       |
+
+### 
+
+
+
+
+
+
+### **泛型参数的实际意义**
+
+#### **(1) 编译时类型检查**
+
+泛型参数 `<String, Object>` 会在编译阶段约束键值类型：
+
+- **键类型约束**：强制键必须为`String`，避免误用其他类型（如`Long`或自定义对象）。
+- **值类型约束**：声明值为`Object`，允许存储任意对象（需配合JSON等通用序列化器）。
+
+#### **(2) 方法返回值明确性**
+
+泛型参数直接影响操作方法的返回值类型：
+
+
+
+```java
+// 使用泛型 <String, Object>
+ValueOperations<String, Object> ops = redisTemplate.opsForValue();
+Object value = ops.get("key");  // 返回Object
+
+// 未使用泛型（默认<Object, Object>）
+ValueOperations<Object, Object> ops = redisTemplate.opsForValue();
+Object value = ops.get(123);    // 键类型不明确
+```
+
+#### **(3) Spring Bean的类型标识**
+
+当存在多个`RedisTemplate` Bean时，泛型参数是区分Bean的关键：
+
+
+
+```java
+@Bean
+public RedisTemplate<String, String> stringRedisTemplate() { /* ... */ }
+
+@Bean
+public RedisTemplate<String, Object> objectRedisTemplate() { /* ... */ }
+
+// 注入时精准匹配类型
+@Autowired 
+private RedisTemplate<String, String> stringRedisTemplate;
+
+@Autowired 
+private RedisTemplate<String, Object> objectRedisTemplate;
+```
+
+
+
+------
+
+### **4. 为什么建议显式声明泛型？**
+
+1. **防御性编程**
+   通过泛型约束，避免键值类型误用（如意外使用`Long`作为键），减少运行时异常。
+2. **代码可维护性**
+   明确键值类型，提升代码可读性，方便后续维护和团队协作。
+3. **序列化器一致性**
+   若键声明为`String`，通常会配套使用`StringRedisSerializer`；若未声明泛型，可能因默认序列化器（JDK序列化）导致数据不可读。
+4. **避免编译器警告**
+   使用原始类型（无泛型）会触发编译器警告，显式声明泛型可消除警告。
+
+------
+
+### **5. 注意事项**
+
+- **序列化器必须匹配泛型**
+  若键声明为`String`，必须设置`StringRedisSerializer`，否则可能因类型不匹配导致序列化失败。
+- **值的灵活性**
+  泛型声明为`Object`时，需确保值序列化器支持多种类型（如`GenericJackson2JsonRedisSerializer`），否则可能反序列化失败。
+- **手动转型风险**
+  虽然值类型声明为`Object`，但实际存储时应尽量保持类型一致性，避免强制转型错误。
+
+---
+
+
+
+## 实际运用
+
+<span style="color:#CC0000;">**配置**</span>
+
+
+
+~~~java
+spring:
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  datasource:
+    druid:
+      driver-class-name: ${sky.datasource.driver-class-name}
+      url: jdbc:mysql://${sky.datasource.host}:${sky.datasource.port}/${sky.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${sky.datasource.username}
+      password: ${sky.datasource.password}
+  redis:
+    host: ${sky.redis.host}
+    port: ${sky.redis.port}
+    password: ${sky.redis.password}
+    database: ${sky.redis.database}
+~~~
+
+
+
+~~~Java
+sky:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: sky_take_out
+    username: root
+    password: 123456
+  alioss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+     
+    进入-密钥-id: 
+    进入-密钥-secret: 
+
+    bucket-name: skyline-delivery
+
+  wechat:
+    app-id（小程序唯一标识）:
+    secret（密钥）: 
+  redis:
+    host: 
+    port: 
+    password: 
+    database: 1
+        
+              
+~~~
+
+**优化代码**
+
+
+
+~~~java
+ @GetMapping("/list")
+    @ApiOperation("根据分类id查询菜品")
+    public Result<List<DishVO>> list(Long categoryId) {
+
+        String key = RedisConstant.CACHE_DISH_KEY + categoryId;
+        List<DishVO> list= (List<DishVO>)redisTemplate.opsForValue().get(key);
+        // 如果list 不为空，直接返回，无需查询数据库
+        if (list != null && !list.isEmpty()) {
+            return Result.success(list); // 直接返回缓存数据
+        }
+
+
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+
+        list = dishService.listWithFlavor(dish);
+        redisTemplate.opsForValue().set(key,list); // 在数据库操作 成功 后就要加入到redis中
+        // 也可以设置过期时间
+
+        return Result.success(list);
+    }
+~~~
+
+**存什么 就获取什么**
+
+
+
+---
+
+### 清除缓存问题
+
+常见问题:数据库数据和缓存之间的不同步
+
+
+
+~~~java
+~~~
+
+
+
