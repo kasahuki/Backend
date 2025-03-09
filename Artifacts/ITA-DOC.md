@@ -130,7 +130,7 @@
 
 ### **完整调用链示例**
 
-```
+```java
 // Controller
 @PostMapping("/orders")
 public Result<OrderDTO> createOrder(@RequestBody OrderCreateRequest request) {
@@ -590,7 +590,7 @@ public class MessageConstant {
 
 **@Bean  // 第三方类的bean对象，交给spring容器管理 注意要返回**
 
-![image-20250221182425814](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250221182425814.png)4
+![image-20250221182425814](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250221182425814.png)
 
 ### **静态资源 vs 动态请求：主要区别**
 
@@ -695,16 +695,6 @@ mybatis:
 
 ~~~Java
 package com.sky.handler;
-
-import com.sky.constant.MessageConstant;
-import com.sky.exception.BaseException;
-import com.sky.result.Result;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.sql.SQLIntegrityConstraintViolationException;
-
 /**
  * 全局异常处理器，处理项目中抛出的业务异常
  */
@@ -735,8 +725,6 @@ public class GlobalExceptionHandler {
             return Result.error(MessageConstant.UNKNOWN_ERROR); // 暂时输出“未知信息”
         }
     }
-
-
 }
 
 ~~~
@@ -1811,6 +1799,10 @@ public class AliOssUtil {
 
     }
 ~~~
+
+
+
+数据库表设计 ：套餐表 菜品表  套餐 菜品关联表     （关联表 一对多 多对一）
 
 
 
@@ -3505,10 +3497,864 @@ sky:
 
 常见问题:数据库数据和缓存之间的不同步
 
+也就是保证数据的一致性
 
+可以使用aop当数据库修改时清空缓存
+
+
+
+思考在执行什么操作的时候清空缓存
+
+新增菜品（由于该项目中新增是停售状态，也就是在起售操作再删也行） 删除菜品
+
+修改菜品 起/停售 
 
 ~~~java
 ~~~
+
+
+
+
+
+---
+
+
+
+## Spring cache
+
+![image-20250308102825908](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308102825908.png)
+
+![image-20250308103005525](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308103005525.png)
+
+
+
+**注意在这里 要回填主键**
+
+![image-20250308104621438](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308104621438.png)
+
+![image-20250308104600435](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308104600435.png)
+
+value 和cacheName 都是命名空间
+
+e.g. userCache:1
+
+![image-20250308105457901](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308105457901.png)
+
+原理也是 ==代理==
+
+一般都是加个==-中间件== 常见手段
+
+### 注解和反射结合
+
+如果没有在缓存中查到 就反射得到这个方法执行这个方法代码
+
+![image-20250308110847199](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308110847199.png)
+
+
+
+![image-20250308111024054](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308111024054.png)
+
+
+
+### 实战
+
+![image-20250308111108385](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308111108385.png)
+
+
+
+用户端和管理端 后台的缓存处理方案：
+
+
+
+![image-20250308112219779](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308112219779.png)
+
+![image-20250308112359698](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308112359698.png)
+
+
+
+
+
+剩余的都是==全部清理== ：
+
+这样**粗度**太大太**暴力**了 最好还是准确清除 那为什么这里**不太好精确清除**呢？
+
+**修改：**如果修改的是分类操作会影响两个缓存
+
+起售/停售 ：**需要知道分类id** 但是传过来就是这个菜品/套餐id 要根据这个菜品/套餐id 查对应的菜品/套餐 然后再提取他们的分类精准删除 这样又涉及到了**查数据库** 得不偿失了！
+
+
+
+TODO：菜品和套餐的缓存清理问题
+
+**最佳实践？**
+
+
+
+## 购物车相关
+
+### **📌 数据库中的冗余字段与逻辑外键**
+
+在数据库设计中，**冗余字段**和**逻辑外键**都是为了解决数据查询效率、性能优化和数据一致性等问题。
+
+------
+
+ **1️⃣ 什么是冗余字段？**
+
+ **✅ 定义**：
+
+**冗余字段**（Redundant Fields）指的是**在多个表中存储相同的数据，以减少查询时的表关联（JOIN）操作**。
+
+ **✅ 为什么使用冗余字段？**
+
+- **提升查询性能**：避免复杂的 `JOIN` 查询，提高查询效率
+- **减少数据库压力**：降低对主表的依赖，减少跨表查询
+- **提高数据读取速度**：有时冗余字段的读操作比 `JOIN` 操作更快
+
+ **❌ 冗余字段的缺点**
+
+!!! ==修改==的时候非常麻烦 这种时候就要明确数据库中的==所有表的组成结构==
+
+**所以选定的时候要那种不要经常发生变化的**
+
+- **数据一致性问题**：如果主表的数据变化，所有含有冗余字段的表都需要更新，否则会造成数据不一致
+- **占用存储空间**：冗余数据会占用额外的存储
+
+ **✅ 示例：**
+
+ **🌟 场景：订单表（orders）冗余了商品名称**
+
+```sql
+-- 商品表（product）
+CREATE TABLE product (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),  -- 商品名称
+    price DECIMAL(10,2) -- 商品价格
+);
+
+-- 订单表（orders） 冗余了 product_name
+CREATE TABLE orders (
+    id INT PRIMARY KEY,
+    product_id INT,        -- 商品ID（外键）
+    product_name VARCHAR(255), -- 冗余字段（商品名称）
+    quantity INT,
+    total_price DECIMAL(10,2)
+);
+```
+
+📌 **说明**：
+
+- `orders` 表中的 `product_name` 就是 **冗余字段**，它的原始数据其实存储在 `product` 表中。
+- 这样做的目的是**减少 `JOIN` 查询**，直接从 `orders` 表就能获取商品名称，提高查询速度。
+- 但如果 `product.name` 更新了，`orders.product_name` 也要同步更新，否则会导致数据不一致。
+
+------
+
+### **2️⃣ 什么是逻辑外键？**
+
+**✅ 定义**：
+
+**逻辑外键**（Logical Foreign Key）指的是**在数据库表中存储外键字段，==但没有真正==建立数据库==外键约束==（Foreign Key Constraint）**。
+
+ **✅ 为什么使用逻辑外键？**
+
+- **提高数据库性能**：真实的外键约束可能会影响插入、更新、删除操作的效率，特别是在大规模数据量时
+- **减少数据库锁冲突**：数据库的外键约束可能导致锁竞争，而逻辑外键不会
+- **方便分库分表**：如果数据库是分库分表架构，物理外键不适用，逻辑外键仍然可以作为数据关联字段
+
+ **❌ 逻辑外键的缺点**
+
+- **缺少数据库级别的约束**：逻辑外键不会强制数据一致性，可能会产生孤立数据
+- **需要应用层处理关联关系**：由于数据库没有强制外键约束，应用代码需要自行维护数据的一致性
+
+**✅ 示例**
+
+### **🌟 真实外键 VS 逻辑外键**
+
+```sql
+-- 真实外键
+CREATE TABLE orders (
+    id INT PRIMARY KEY,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id)  -- 真实外键
+);
+```
+
+📌 **缺点**：
+
+- 如果 `users` 表中的用户被删除，`orders` 表中的相关订单也会被级联删除或导致错误。
+
+```sql
+-- 逻辑外键（不加 FOREIGN KEY 约束）
+CREATE TABLE orders (
+    id INT PRIMARY KEY,
+    user_id INT -- 逻辑外键（只是一个存储字段，没有真实外键约束）
+);
+```
+
+📌 **优点**：
+
+- `user_id` 仍然用于关联 `users` 表，但数据库不会强制外键约束，删除 `users` 中的数据不会影响 `orders` 表。
+- 需要在应用程序代码层面处理关联关系，如**手动检查 `user_id` 是否有效**。
+
+---
+
+
+
+思考为什么要给购物车建一张表呢
+
+
+
+## 添加购物车
+
+插入前要先查询是否已经有一样的了 一样的就number++
+
+
+
+动态sql
+
+为什么用list接收数据呢 
+
+因为动态sql是通用的方法 可以推广 所以让它普遍化 common
+
+![image-20250308141919761](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308141919761.png)
+
+
+
+~~~xml
+	<select id="list" resultType="com.sky.entity.ShoppingCart">
+		select * from shopping_cart
+		<where>
+			<if test="userId!=null">
+				and user_id = #{userId}
+			</if>
+			<if test="dishId!=null">
+				and dish_id = #{dishId}
+			</if>
+			<if test="setmealId!=null">
+				and setmeal_id = #{setmealId}
+			</if>
+			<if test="dishFlavor!=null">
+				and dish_flavor = #{dishFlavor}
+			</if>
+		</where>
+	</select>
+~~~
+
+
+
+~~~java
+ // 重要方法论
+    @Override
+    @Transactional
+    public void add(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        // 熟悉表结构和实体类
+        // 这里还需要将   userId 赋值给 shoppingCart
+        Long userId = BaseContext.getCurrentId();
+        shoppingCart.setUserId(userId);
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart); // 看看是否能查到相关的菜品/套餐
+        if (list != null && list.size() > 0) {
+            ShoppingCart cart = list.get(0); // 这里肯定只有一个元素
+            cart.setNumber(cart.getNumber() + 1);
+            // 这里只是将对象的属性修改了 数据库的数据还没有同步修改
+            shoppingCartMapper.updateNumberById(cart);
+            return ;
+        }
+        // 如果不存在的话
+
+        // 插入数据的时候要看看有没有字段没带上 这种时候考虑要携带 不要随意操作数据库 要 对应数据库和传过去的实体类 以及实体类此时的属性结构
+        Long dishId = shoppingCartDTO.getDishId();
+
+        if (dishId != null) {
+            // 添加菜品需要的的信息
+            Dish dish = dishMapper.getById(dishId);
+            shoppingCart.setName(dish.getName());
+            shoppingCart.setImage(dish.getImage());
+            shoppingCart.setAmount(dish.getPrice());
+
+
+        }else {
+            // 添加套餐需要的的信息
+            Long setmealId = shoppingCartDTO.getSetmealId();
+            Setmeal setmeal = setmealMapper.getById(setmealId);
+            shoppingCart.setName(setmeal.getName());
+            shoppingCart.setImage(setmeal.getImage());
+            shoppingCart.setAmount(setmeal.getPrice());
+
+        }
+        shoppingCart.setNumber(1);
+        shoppingCart.setCreateTime(LocalDateTime.now());
+
+        shoppingCartMapper.insert(shoppingCart); // 插入数据
+
+
+    }
+~~~
+
+
+
+## 删除购物车其中一个
+
+~~~java
+@Override
+    public void sub(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        Long userId = BaseContext.getCurrentId();
+        shoppingCart.setUserId(userId);
+        // 删除也是不能直接删 要先查询看看number
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart); // 动态查询
+        
+        if (list != null && list.size() > 0) {
+            ShoppingCart cart = list.get(0);
+            if (cart.getNumber() == 1) {
+                shoppingCartMapper.deleteItem(cart.getId());
+                return;
+            }
+            cart.setNumber(cart.getNumber() - 1);
+            shoppingCartMapper.updateNumberById(cart);
+        }
+    }
+~~~
+
+
+
+**数据库表和实体类最重要 在研究项目结构和写项目时**
+
+
+
+
+
+
+
+---
+
+
+
+# 下单以及支付模块
+
+## 设置唯一默认地址
+
+~~~java
+  @Transactional
+    public void setDefault(AddressBook addressBook) {
+        //1、将当前用户的所有地址修改为非默认地址 update address_book set is_default = ? where user_id = ?
+        addressBook.setIsDefault(0);
+        addressBook.setUserId(BaseContext.getCurrentId());
+        addressBookMapper.updateIsDefaultByUserId(addressBook);
+
+        //2、将当前地址改为默认地址 update address_book set is_default = ? where id = ?
+        addressBook.setIsDefault(1);
+        addressBookMapper.update(addressBook);
+    }
+~~~
+
+~~~java
+  @Update("update address_book set is_default = #{isDefault} where user_id = #{userId}")
+    void updateIsDefaultByUserId(AddressBook addressBook);
+
+~~~
+
+在这里为什么要  addressBook.setIsDefault(0);
+
+是因为sql语句 这个是将用户所有地址默认值修改为 参数
+
+如果不用参数就用0的话就不够优雅 不像动态sql那样 ==多用性==
+
+## 查询默认地址
+
+~~~java
+    @GetMapping("default")
+    @ApiOperation("查询默认地址")
+    public Result<AddressBook> getDefault() {
+        //SQL:select * from address_book where user_id = ? and is_default = 1
+        AddressBook addressBook = new AddressBook();
+        addressBook.setIsDefault(1);
+        addressBook.setUserId(BaseContext.getCurrentId());
+        
+        List<AddressBook> list = addressBookService.list(addressBook); 
+
+        if (list != null && list.size() == 1) {
+            return Result.success(list.get(0));
+        }
+
+        return Result.error("没有查询到默认地址");
+    }
+
+}
+~~~
+
+**动态sql经典用法**
+
+## 查询所有地址
+
+~~~java
+ @GetMapping("/list")
+    @ApiOperation("查询当前登录用户的所有地址信息")
+    public Result<List<AddressBook>> list() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.setUserId(BaseContext.getCurrentId());
+        List<AddressBook> list = addressBookService.list(addressBook);
+        return Result.success(list);
+    }
+~~~
+
+~~~xml
+  <select id="list" parameterType="AddressBook" resultType="AddressBook">
+        select * from address_book
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="phone != null">
+                and phone = #{phone}
+            </if>
+            <if test="isDefault != null">
+                and is_default = #{isDefault}
+            </if>
+        </where>
+    </select>
+~~~
+
+## 更新动态sql写法
+
+
+
+~~~xml
+<update id="update" parameterType="addressBook">
+        update address_book
+        <set>
+            <if test="consignee != null">
+                consignee = #{consignee},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="detail != null">
+                detail = #{detail},
+            </if>
+            <if test="label != null">
+                label = #{label},
+            </if>
+            <if test="isDefault != null">
+                is_default = #{isDefault},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+~~~
+
+
+
+
+
+## 用户下单
+
+### 接口设计
+
+![image-20250309151806205](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309151806205.png)
+
+**配合购物车和地址表 表与表之间联系和配合**
+
+![image-20250309152217429](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309152217429.png)
+
+支付需要明确订单id
+
+前端需要什么数据也得返回什么数据
+
+![image-20250309152337426](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309152337426.png)
+
+### 数据库设计
+
+![image-20250309152645773](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309152645773.png)
+
+
+
+
+
+![image-20250309152700814](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309152700814.png)
+
+
+
+![image-20250309153000626](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309153000626.png)
+
+## 订单支付
+
+思考：为什么要有那么多关于订单Order的实体类呢？
+
+
+
+
+
+**根据接口传参和返回值构造实体类**
+
+
+
+![image-20250309153131761](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309153131761.png)
+
+![image-20250309153137958](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309153137958.png)
+
+### 代码开发
+
+#### 处理业务异常
+
+**<span style="color:#FF0000;">类中常量技巧</span>**
+
+
+
+
+
+![image-20250309163749660](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309163749660.png)
+
+
+
+
+
+~~~xml
+	<insert id="insert" useGeneratedKeys="true" parameterType="Orders" keyProperty="id">
+		INSERT INTO orders (
+		id, number, status, user_id, address_book_id, order_time, checkout_time, pay_method,
+		pay_status, amount, remark, user_name, phone, address, consignee, cancel_reason,
+		rejection_reason, cancel_time, estimated_delivery_time, delivery_status, delivery_time,
+		pack_amount, tableware_number, tableware_status
+		) VALUES (
+		#{id}, #{number}, #{status}, #{userId}, #{addressBookId}, #{orderTime}, #{checkoutTime}, #{payMethod},
+		#{payStatus}, #{amount}, #{remark}, #{userName}, #{phone}, #{address}, #{consignee}, #{cancelReason},
+		#{rejectionReason}, #{cancelTime}, #{estimatedDeliveryTime}, #{deliveryStatus}, #{deliveryTime},
+		#{packAmount}, #{tablewareNumber}, #{tablewareStatus}
+		)
+	</insert>
+
+~~~
+
+
+
+ **`useGeneratedKeys="true"`**
+
+✅ **作用**：
+
+- 表示**使用数据库自动生成的主键**，通常配合数据库的 `AUTO_INCREMENT`（自增主键）使用。
+- 插入数据后，MyBatis 会自动将生成的主键值赋值给参数对象中的指定属性（即 `keyProperty` 指定的属性）。
+
+**keyProperty="id"`**
+
+✅ **作用**：
+
+- 指定**将生成的主键值回填**到 `Orders` 实体类中的 `id` 属性。
+
+
+
+---
+
+
+
+**批量插入：**
+
+~~~xml
+<insert id="insertBatch" parameterType="java.util.List">
+		insert into order_detail (order_id, dish_id, setmeal_id, dish_flavor, name, image,
+		                          amount,
+		                          number,
+		                          )
+		values
+		<foreach collection="orderDetailList" item="od" separator=",">
+			(#{od.orderId},#{od.dishId},#{od.setmealId},#{od.dishFlavor},#{od.name},#{od.image},#{od.amount},#{od.number})
+		</foreach>
+	</insert>
+~~~
+
+
+
+
+
+### 核心逻辑
+
+
+
+~~~java
+package com.sky.service.impl;
+/**
+ * @author senjay
+ */
+@Service
+public class OrderServiceImpl implements OrderService {
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private AddressBookMapper addressBookMapper;
+
+    @Autowired
+    private ShoppingCartMapper shoppingCartMapper;
+
+
+    // 每一张表都对应一个mapper
+    // 后有三个！ 就是没想到的
+    @Override
+    @Transactional
+    public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO) {
+        // 处理业务异常（也就是涉及到多个参数的合法性校验了！！！） e.g. 地址为空，购物车数据为空
+        AddressBook addressBook = addressBookMapper.getById(ordersSubmitDTO.getAddressBookId());
+        if (addressBook == null) {
+            throw new RuntimeException(MessageConstant.ADDRESS_BOOK_IS_NULL);
+        }
+        Long userId = BaseContext.getCurrentId();
+        ShoppingCart shoppingCart = new ShoppingCart();
+        shoppingCart.setUserId(userId);
+        List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
+        if (shoppingCartList == null || shoppingCartList.size() == 0){
+            // 可以用常量
+            throw new RuntimeException(MessageConstant.SHOPPING_CART_IS_NULL);
+
+        }
+        Orders orders = new Orders();
+        BeanUtils.copyProperties(ordersSubmitDTO, orders);
+        orders.setUserId(userId);
+        orders.setOrderTime(LocalDateTime.now());
+        orders.setPayStatus(Orders.UN_PAID);
+        orders.setStatus(Orders.PENDING_PAYMENT);
+        orders.setNumber(String.valueOf(System.currentTimeMillis()));
+        // 设置订单号
+        // 为什么需要这么多的status呢
+        orders.setConsignee(addressBook.getConsignee());
+        orders.setPhone(addressBook.getPhone());
+        // 已经在上面获取了addressBook 了 这就是利用已有信息 不到万不得已不要查数据库
+        // 插入订单 这里也需要回填orders主键id 因为后面有个表需要
+        orderMapper.insert(orders);
+        List<OrderDetail> orderDetailList = new ArrayList<>();
+
+        shoppingCartList.forEach(cart -> {
+            OrderDetail orderDetail = new OrderDetail();
+            BeanUtils.copyProperties(cart, orderDetail);
+            orderDetail.setOrderId(orders.getId());
+            orderDetailList.add(orderDetail);
+//            orderDetailMapper.insert(orderDetail); // 插入 这样有点效率低下了 直接批量插入
+        });
+        orderDetailMapper.insertBatch(orderDetailList);
+        shoppingCartMapper.deleteByUserId(userId);
+        return OrderSubmitVO.builder()
+                .id(orders.getId())
+                .orderNumber(orders.getNumber())
+                .orderAmount(orders.getAmount())
+                .orderTime(orders.getOrderTime())
+                .build();
+        // 新增订单
+        // 需要一个订单表对应的实体类
+        // 自己封装一些前端没有传过来的数据 明白DTO结构 以及 订单表结构 还有 返回的数据结构
+        // 还需要对订单详情表进行操作
+        // 清空购物车数据 ！！！
+
+
+    }
+}
+
+~~~
+
+
+
+
+
+
+
+## 订单支付
+
+
+
+
+
+---
+
+# DAY 9
+
+
+
+
+
+
+
+---
+
+
+
+# 定时任务 springtask & WebSocket
+
+![image-20250308120557123](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308120557123.png)
+
+![image-20250308120618483](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250308120618483.png)
+
+---
+
+**Cron表达式**
+
+
+
+直接利用工具生成
+
+https://cron.qqe2.com/
+
+![image-20250309173412109](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309173412109.png)
+
+**日周互斥**
+
+
+
+### 实战
+
+**与  事务开启  **  和**spring cache** 一样都是同个玩法 就相当于开关一样
+
+![image-20250309174750835](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309174750835.png)
+
+Task schedule 任务调度
+
+cron 时间（定时） 
+
+
+
+
+### 订单状态定时处理
+
+![image-20250309181058493](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309181058493.png)
+
+
+
+### Mybatis的命名规范
+
+`getByStatusAndOrderTimeLT` 这个方法名遵循了**Spring Data JPA** 和 **MyBatis** 等常见的命名规范，属于一种**命名约定查询**（**Query Method Naming Convention**）。它的结构具有特定含义，以下是详细解析：
+
+
+
+~~~java
+package com.sky.task;
+
+import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Component
+@Slf4j
+public class OrderTask {
+    @Autowired
+    private OrderMapper orderMapper;
+
+    // 处理超时未支付订单
+    @Scheduled(cron = "0 * * * * ?") // 每分钟执行一次
+    public void processTimeoutOrder() {
+        log.info("定时处理超时订单:{}",LocalDateTime.now());
+
+        LocalDateTime time = LocalDateTime.now().plusMinutes(-15);
+        // 当前时间减去15分钟
+        // 根据待支付订单查询出超时订单
+        List<Orders> orderList = orderMapper.getByStatusAndOrderTimeLT(Orders.PENDING_PAYMENT, time);
+
+        // 如果有这样的订单
+        if (orderList != null && orderList.size() > 0) {
+            orderList.forEach(order -> {
+                order.setStatus(Orders.CANCELLED); // 设置订单状态为已取消
+                order.setCancelReason("订单超时，自动取消"); // 设置取消原因
+                order.setCancelTime(LocalDateTime.now()); // 设置取消时间
+                orderMapper.update(order); // 更新订单状态
+            });
+        }
+    }
+
+    // 处理一直处于派送中的订单 这里是要管理平台点击确认到货的
+    @Scheduled(cron = " 0 0 1 * * ?") // 每天凌晨一点
+    public void processDeliveryOrder() {
+        log.info("定时处理一直处于派送中的订单:{}",LocalDateTime.now());
+        LocalDateTime time = LocalDateTime.now().plusMinutes(-60);
+        // 当前时间减去1小时
+
+        List<Orders> orderList = orderMapper.getByStatusAndOrderTimeLT(Orders.DELIVERY_IN_PROGRESS, time);
+
+        // 如果有这样的订单
+        if (orderList != null && !orderList.isEmpty()) {
+            orderList.forEach(order -> {
+                order.setStatus(Orders.COMPLETED); // 设置订单状态为已完成
+                orderMapper.update(order); // 更新订单状态
+            });
+        }
+
+
+    }
+}
+
+~~~
+
+
+
+
+
+
+
+| 部分              | 含义                                              |
+| ----------------- | ------------------------------------------------- |
+| `get`             | 动作（方法前缀），表示**查询**。                  |
+| `By`              | 关键字，表示查询的条件开始。                      |
+| `Status`          | 条件 1，表示按 `status` 字段查询。                |
+| `And`             | 逻辑运算符，表示多个条件的组合（`AND` 关系）。    |
+| `OrderTime`       | 条件 2，表示按 `orderTime` 字段作为查询条件。     |
+| `LT`（Less Than） | 运算符，表示 "`orderTime < 某个值`"（小于）条件。 |
+
+
+
+**<span style="color:#FF0000;">动态sql更新逻辑 主要要符合业务逻辑的接口</span>**
+
+
+
+
+
+![image-20250309191251269](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309191251269.png)
+
+
+
+
+
+# Apache Echart
+
+
+
+
+
+
+
+
+
+---
+
+
+
+# Apache POI
+
+
+
+
+
+
+
+---
+
+
+
+# VUE Recollection
+
+
+
+
+
+
 
 
 
