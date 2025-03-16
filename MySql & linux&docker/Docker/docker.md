@@ -5,9 +5,17 @@
 sudo apt-get install open-vm-tools
 sudo apt-get install open-vm-tools-desktop
 
-## docker 安装 与 desbian 换源
+## docker 安装 
 
 desbian apt安装的源 ：==/etc/apt/sources.list==
+
+![image-20250316125922717](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316125922717.png)
+
+
+
+docer镜像源就去阿里云或者什么开源平台上找
+
+
 
 ### [Install using the `apt` repository](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 
@@ -77,6 +85,7 @@ You have now successfully installed and started Docker Engine.
 
 # 安装Docker相关组件：
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
  docker-ce：Docker引擎核心组件
  docker-ce-cli：Docker命令行工具
  containerd.io：容器运行时
@@ -178,7 +187,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 **在执行docker run --name my-container（容器名） -it ubuntu（镜像）时 ， 如果不指定--name 的话就会随机生成一个容器名字！**
 
-1. 显示运行中的容器名
+1. 显示**运行中**的容器名
 
 
 
@@ -186,7 +195,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 docker ps
 ```
 
-1. 显示所有容器（包括已停止的）
+1. 显示所有容器（包括已停止的）-all
 
 
 
@@ -196,7 +205,7 @@ docker ps -a
 
 1. 只显示容器名
 
-
+格式化输出
 
 ```bash
 docker ps -a --format "{{.Names}}"
@@ -212,7 +221,9 @@ docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 1. 如果想按特定镜像过滤
 
+管道符 和 grep
 
+ 
 
 ```bash
 docker ps -a | grep 镜像名
@@ -256,7 +267,7 @@ docker ps --format "{{.Image}}"
 
 1. 查看特定容器的镜像
 
-
+inspect 检查
 
 ```bash
 docker inspect 容器名/ID | grep Image
@@ -486,12 +497,6 @@ docker容器的数据不会持久化（什么时候丢失呢 ？会缓存吗？�
 
 ---
 
-# Cookie & Session & Token
-
-
-
-
-
 
 
 ## **1. amd64**
@@ -565,196 +570,9 @@ docker容器的数据不会持久化（什么时候丢失呢 ？会缓存吗？�
 | **应用领域** | 桌面、服务器       | 手机、嵌入式、服务器    | 老旧 PC、嵌入式设备 |
 | **制造商**   | Intel、AMD         | ARM Holdings 及授权厂商 | Intel、AMD 等       |
 
-# vpn 与系统代理
-
-在使用 VPN 时，系统代理的开启状态会影响网络流量的路径和访问某些网站的方式，这主要涉及到网络流量的路由和代理设置：
-
-1. **不开启系统代理**：
-
-    当系统代理关闭时，通常网络流量直接经过你的本地网络设置，通过本地的路由器和==互联网服务提供商（ISP）==提供的网络路径来访问互联网。
-    
-    VPN 连接会建立一个加密的==隧道==，将你的流量通过 VPN 服务器进行路由，隐藏你的真实 IP 地址，同时提供更安全的连接。
-    
-2. **开启系统代理**：
-
-    当系统代理开启时，你的操作系统会通过==代理服务器==来发送和接收网络请求。这可能是公司或组织内部的代理服务器，或者是一些公共代理服务（如翻墙软件常用的代理服务器）。
-    
-    如果你在使用 VPN 的同时开启系统代理，那么流量可能会先经过系统代理服务器，然后再通过 VPN 隧道发送到 VPN 服务器，最终访问互联网。这种情况下，系统代理服务器和 VPN 服务器之间的路由可能会影响一些网站的访问能力，特别是那些对访问来源有特定要求或限制的网站。
-    
-    ~~~ceylon
-    系统代理的影响： 系统代理的开启状态会影响你的网络流量走向，可能会经过另外的代理服务器或者公司的内部网络。某些网站可能根据代理服务器的 IP 地址或网络识别出你的访问来源，这可能导致一些网站在系统代理开启时可以访问，而在关闭时无法访问。 网站的访问策略和识别： 有些网站使用复杂的访问控制策略，可能会根据多个因素来决定是否允许访问，包括 IP 地址、用户代理（User-Agent）、Cookies 等。开启或关闭 VPN 和系统代理可能改变这些因素，从而影响你的访问结果。
-    ~~~
-    
-## 代理的on/off
-
-没有开启代理，而单纯使用 VPN 连接，访问国内没有被墙的网站会有以下情况：
-
-**这和全局有点像**
-
-1. **流量路由**：
-
-   所有的网络流量都会通过 VPN 提供的加密隧道发送到 VPN 服务器。这意味着国内没有被墙的网站的访问流量也会经过 VPN 连接。
-
-2. **访问效果**：
-
-   VPN 连接可能会引入一定的延迟，因为流量需要经过 VPN 服务器路由。对于国内网站，这种延迟可能会导致访问速度稍微变慢一些，特别是如果 VPN 服务器位置远离你的实际位置。
-
-3. **隐私和安全**：
-
-   使用 VPN 可以提供加密和隐私保护，确保你的网络流量在公共网络中不易被截获或窃取。即使是访问国内网站，VPN 也可以保护你的数据传输安全，尤其是在使用不安全的公共 Wi-Fi 网络时尤为重要。
-
-**流量路由**：
-
-如果代理设置的优先级高于 VPN 或者单独使用代理，你的网络流量会通过代理服务器发送而不经过 VPN 隧道。
-
-这意味着国内没有被墙的网站的访问流量不会通过 VPN 提供的加密通道，而是直接通过代理服务器发送和接收数据。
-
-**访问速度和稳定性**：
-
-使用代理服务器可能会影响访问速度和稳定性，具体取决于代理服务器的性能和网络质量。有时候使用代理可能会提高访问速度，尤其是对于国内网站，因为可以避免 VPN 所带来的额外延迟。
-
-**隐私和安全**：
-
-如果代理服务器未经过适当配置或管理，可能会存在隐私和安全风险，因为数据不会经过 VPN 提供的加密保护。这可能暴露你的真实 IP 地址和数据内容，尤其是对于敏感信息的传输。
-
-# Vps 和 云服务器
-
-VPS（Virtual Private Server）和云服务器（Cloud Server）都属于虚拟化技术，但它们有一些关键的区别：
-
-### 1. **虚拟化方式和资源分配**
-   - **VPS**：
-     - VPS 是在一台物理服务器上创建多个虚拟服务器，每个 VPS 都有独立的操作系统和资源（如 CPU、内存、存储等）。
-     - VPS 通常使用 **基于虚拟化技术**（如 KVM、OpenVZ 等）来实现资源分配。
-     - 资源分配是固定的，即购买了多少资源就能使用多少。
-
-   - **云服务器**：
-     - 云服务器是基于云计算架构的，通常由多个物理服务器和存储设备组成，利用 **虚拟化技术和分布式计算**来动态分配资源。
-     - 云服务器的资源（如 CPU、内存、存储）通常是按需分配的，可以随时扩展和缩减，具有较强的弹性。
-     - 云服务器通常还提供多区域和多可用区的支持，使得服务具有高可用性和容错能力。
-
-### 2. **弹性和扩展性**
-   - **VPS**：
-     - 扩展性较差，资源分配较为固定，增加或减少资源（如 CPU 或内存）往往需要手动操作，甚至需要迁移到另一台物理服务器。
-     - VPS 的扩展通常比较复杂，无法像云服务器那样灵活地按需增加资源。
-
-   - **云服务器**：
-     - 云服务器提供高度的弹性和按需扩展功能，可以随时根据负载需求增加或减少资源，不需要迁移，能迅速响应变化的需求。
-     - 云服务器还支持负载均衡、自动扩展等功能，适应大规模、高并发的应用场景。
-
-### 3. **管理方式**
-   - **VPS**：
-     - 通常由用户自己管理和维护，用户需要自行配置操作系统、安装软件、处理安全问题等。
-     - 比较适合需要定制化配置和有一定技术能力的用户。
-
-   - **云服务器**：
-     - 提供更多的自动化管理功能，比如自动备份、自动扩展、监控和警报等。云服务提供商通常会为用户提供更多的管理工具和服务。
-     - 适合需要高可用性、可靠性和自动化管理的用户。
-
-### 4. **可靠性和高可用性**
-   - **VPS**：
-     - VPS 受限于物理服务器，一旦物理服务器出现故障，可能会影响多个 VPS。
-     - 高可用性和容错能力较弱，通常需要手动搭建高可用架构。
-
-   - **云服务器**：
-     - 云平台通常在多个数据中心之间分布，支持高可用性和自动容错。即使某个节点出现问题，云服务器可以自动迁移到其他节点，确保服务不间断。
-     - 提供多区域、跨区域的部署选项，保障服务的可靠性和灾难恢复能力。
-
-### 5. **价格**
-   - **VPS**：
-     - 通常价格较为固定和便宜，适合低预算的项目或个人使用。
-     - 定价相对简单，按月或按年付费。
-
-   - **云服务器**：
-     - 通常价格较高，尤其是资源使用弹性较大的情况。但也支持按需计费，可以按小时或按流量收费，灵活性更高。
-     - 可以根据实际使用量收费，适合流量波动大或需要动态扩展的应用场景。
-
-### 总结：
-- **VPS** 更适合小型网站、开发测试、预算有限的用户，资源相对固定，适合对性能要求较为简单的场景。
-- **云服务器** 更适合需要高可用、弹性扩展、大流量应用的用户，具有更强的扩展性和高可靠性，支持按需计费，适合企业级应用。
-
-希望这能帮助你理解两者的区别！如果有更多问题，欢迎继续问！
-
-# 建站流程
-
-将网站上线互联网通常需要使用服务器来托管和访问网站内容。下面分别介绍使用云服务器和不使用云服务器的方法：
-
-### 使用云服务器的方法：
-
-[具体流程](https://www.bilibili.com/video/BV1Gx421Q7sB/?spm_id_from=333.337.search-card.all.click&vd_source=9570fc9c9829e70449f020506364bf36)
-
-
-
-1. **选择云服务提供商**：
-   - 注册并选择一个信誉良好、服务稳定的云服务提供商，如AWS、Azure、阿里云、腾讯云等。
-
-2. **购买服务器实例**：
-   - 在云服务提供商的控制台上选择合适的服务器实例（例如虚拟机），根据你的需求选择适当的配置（CPU、内存、存储空间等）。
-
-3. **配置服务器环境**：
-   - 安装操作系统（如Linux、Windows），配置网络、安全组（防火墙规则）、存储等设置。
-
-4. **部署网站**：
-   - 将==网站文件上传到服务器实例==，配置==Web服务器==（如Nginx、Apache）、数据库（如MySQL、PostgreSQL）等服务。
-
-5. **域名绑定**：
-   - 在域名注册商处购买域名，并将域名解析指向你的云服务器IP地址或者使用云服务商提供的DNS服务。
-
-6. **配置SSL证书**（可选但推荐）：
-   - 为网站配置SSL证书，确保网站传输数据的安全性和可信度。
-
-7. **监控和管理**：
-   - 配置监控和警报，确保服务器和网站的稳定性和安全性，可以使用云服务商提供的监控工具或者第三方工具。
-
-8. **备份和灾难恢复**：
-   - 设置定期备份策略，保护网站数据，以便在需要时进行灾难恢复。
-
-### 不使用云服务器的方法：
-
-如果不使用云服务器，你可以考虑以下几种方法：
-
-1. **使用共享托管服务**：
-   - 注册并选择一个共享托管服务提供商，如Bluehost、HostGator、GoDaddy等。
-   - 根据服务商提供的控制面板和工具，上传网站文件，配置域名和基本设置。
-
-2. **自建服务器**：
-   - 如果有技术能力和资源，可以购买自己的物理服务器（或租用托管服务），将服务器放置在数据中心或者自己的办公室。
-   - 需要考虑网络连接、安全性、电力和空调等基础设施问题。
-
-3. **使用其他云服务**：
-   - 不直接使用云服务器，但可以使用其他云服务提供商的服务，如对象存储（如AWS S3、阿里云 OSS）来托管网站的静态文件，或者使用CDN加速服务来提供内容分发。
-
-4. **使用服务器软件**：
-   - 在本地计算机或者自己的物理服务器上安装服务器软件（如Nginx、Apache），通过公网IP或者动态DNS服务让其他人可以访问你的网站。
-
-### 总结：
-
-- **使用云服务器**通常更灵活、稳定，并且具备弹性伸缩的能力，适合大部分需要上线互联网的个人网站和应用。
-- **不使用云服务器**需要考虑到网络带宽、服务器硬件的购买和维护成本、安全性等因素，适合技术能力较强且有特殊需求的用户。
-
-根据你的具体需求、预算和技术能力选择适合的方法来上线你的个人网站。如有更多问题或需要进一步指导，请随时提问！
-
 
 
 ## vscode docker
-
-vscode快捷键：
-
-**打开工程：code + 路径**
-**打开指定文件：ctrl + p**
-**打开/关闭终端：ctrl + ` (1左边的按键)**
-**跳转到行：ctrl + g**
-**按单词移动光标：ctrl + 左右**
-**选中单词：ctrl + d （重复按可以多选）**
-**选中行：ctrl + l （重复按会同时选择下一行）**
-**移动行：alt + 上下**
-**格式化代码：ctrl + shift + i**
-**跳转到定义：f12**
-**查看当前文件符号：ctrl + shift + o**
-**剪切/复制当前行：ctrl + x / ctrl + c （什么都不选的时候）**
-**切换tab：alt+数字**
-**顺序切换tab：ctrl + pageup / pagedown**
-**关闭文件：ctrl+w**
-**关闭所有文件：ctrl + k w （ctrl不松手）**
 
 
 
@@ -765,6 +583,12 @@ vscode快捷键：
 教程 ：https://zhuanlan.zhihu.com/p/468768617
 
 结合**远程SSH**
+
+
+
+---
+
+
 
 ## 文件权限问题 （linux）
 
@@ -788,51 +612,21 @@ rw-(目录所有者) rw-（目录所属组） rw-（其他用户）
 
 1. **更改所有者**： 使用 `chown` 命令来更改目录的所有者：
 
-   ```
-   bash
-   
-   
-   复制代码
+   ```bash
    sudo chown newuser my_directory
    ```
-
+   
 2. **更改所属组**： 使用 `chown` 命令来更改目录的所属组：
 
-   ```
-   bash
-   
-   
-   复制代码
+   ```bash
    sudo chown :newgroup my_directory
    ```
-
+   
 3. **更改所有者和所属组**： 使用 `chown` 命令同时更改目录的所有者和所属组：
 
-   ```
-   bash
-   
-   
-   复制代码
+   ```bash
    sudo chown newuser:newgroup my_directory
    ```
-
-### Socket （套接字） ：
-
-
-
-套接字（Socket）和端口（Port）是两个不同概念，但它们在网络通信中密切相关：
-
-### 套接字（Socket）网络编程
-
-1. **定义**：
-   * 套接字是一种用于**进程间通信**的抽象概念，允许**不同进程**在**同一台计算机或通过网络（client and server ）进行数据交换**。
-   * 在操作系统中，套接字被实现为一种特殊的文件类型（套接字文件 文件内没有实际数据），用于在进程间传输数据。
-2. **特点**：
-   * 套接字通常通过套接字 API（如 POSIX 的 socket API 或 Windows 的 Winsock API）来创建和使用。
-   * 可以创建不同类型的套接字，包括面向连接的套接字（如 TCP 套接字）和无连接的套接字（如 UDP 套接字）。
-3. **用途**：
-   * 用于在**同一台计算机内部的进程间通信（UNIX 域套接字**）。
-   * 用于在网络上**不同计算机间**的进程通信（网络套接字）
 
 ## debian root用户登录禁止
 
@@ -871,7 +665,227 @@ permission denied：表示权限被拒绝，不能执行命令。
 * **`1001`**：
   * **组ID（GID）**（Group ID）：每个用户也属于一个组。这个 `1001` 是该用户的默认组 ID。通常情况下，系统会为每个用户创建一个同名的用户组，UID 和 GID 相同（例如 `username` 用户的 GID 就是 `1001`）。
 
-## 
+
+
+
+
+
+
+---
+
+
+
+# Docker 的基本使用
+
+## 基本命令
+
+| **类别**           | **命令**                                                     | **描述**                                               |
+| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------ |
+| **容器管理**       | `docker ps`                                                  | 查看正在运行的容器                                     |
+|                    | `docker ps -a`                                               | 查看所有容器，包括已停止的容器                         |
+|                    | `docker start <container_name_or_id>`                        | 启动一个容器                                           |
+|                    | `docker stop <container_name_or_id>`                         | 停止一个容器                                           |
+|                    | `docker restart <container_name_or_id>`                      | 重启一个容器                                           |
+|                    | `docker rm <container_name_or_id>`                           | 删除一个容器                                           |
+|                    | `docker logs <container_name_or_id>`                         | 查看容器的日志                                         |
+|                    | `docker exec -it <container_name_or_id> /bin/bash`           | 进入容器的终端                                         |
+|                    | `docker stats <container_name_or_id>`                        | 查看容器的资源使用情况                                 |
+| **镜像管理**       | `docker images`                                              | 查看本地镜像                                           |
+|                    | `docker pull <image_name>:<tag>`                             | 拉取镜像                                               |
+|                    | `docker rmi <image_name_or_id>`                              | 删除镜像                                               |
+|                    | `docker build -t <image_name>:<tag> <path_to_dockerfile>`    | 使用 Dockerfile 构建镜像                               |
+| **容器与镜像管理** | `docker run <options> <image_name>`                          | 运行一个容器，常用选项如 `-d`, `-p`, `-v`, `--name` 等 |
+|                    | `docker history <image_name>`                                | 查看镜像的历史记录                                     |
+|                    | `docker export <container_name_or_id> > container.tar`       | 导出容器文件系统到 `.tar` 文件                         |
+|                    | `docker import <file.tar> <new_image_name>:<tag>`            | 从 `.tar` 文件导入镜像                                 |
+| **网络管理**       | `docker network ls`                                          | 查看 Docker 网络                                       |
+|                    | `docker network create <network_name>`                       | 创建 Docker 网络                                       |
+|                    | `docker inspect <container_name_or_id>`                      | 查看容器的网络设置                                     |
+|                    | `docker network connect <network_name> <container_name_or_id>` | 连接容器到网络                                         |
+|                    | `docker network disconnect <network_name> <container_name_or_id>` | 断开容器与网络的连接                                   |
+| **数据卷管理**     | `docker volume create <volume_name>`                         | 创建数据卷                                             |
+|                    | `docker volume ls`                                           | 查看数据卷                                             |
+|                    | `docker volume inspect <volume_name>`                        | 查看数据卷详细信息                                     |
+|                    | `docker volume rm <volume_name>`                             | 删除数据卷                                             |
+| **容器编排**       | `docker service ls`                                          | 查看正在运行的服务（在 Swarm 模式下）                  |
+|                    | `docker service inspect <service_name>`                      | 查看服务的详细信息                                     |
+|                    | `docker service ps <service_name>`                           | 查看服务的任务（容器实例）                             |
+|                    | `docker service scale <service_name>=<replica_count>`        | 扩展服务副本数                                         |
+| **系统管理**       | `docker --version`                                           | 查看 Docker 版本                                       |
+|                    | `docker info`                                                | 查看 Docker 配置信息                                   |
+|                    | `docker system prune`                                        | 清理未使用的镜像、容器、网络和数据卷                   |
+|                    | `docker stats`                                               | 查看 Docker 容器资源使用情况                           |
+| **Docker Compose** | `docker-compose up`                                          | 启动 Compose 服务                                      |
+|                    | `docker-compose up -d`                                       | 后台启动 Compose 服务                                  |
+|                    | `docker-compose down`                                        | 停止 Compose 服务                                      |
+|                    | `docker-compose logs`                                        | 查看 Compose 服务的日志                                |
+|                    | `docker-compose ps`                                          | 查看 Compose 服务的状态                                |
+
+`docker inspect` 命令用于获取容器、镜像、网络或数据卷等 Docker 资源的详细信息。它会返回 JSON 格式的数据，包含资源的配置、状态、网络设置等信息。
+
+### 基本语法：
+
+```bash
+docker inspect <resource_name_or_id>
+```
+
+### 资源类型：
+
+- **容器**：可以查看容器的详细信息（如网络、挂载卷、环境变量等）。
+- **镜像**：可以查看镜像的详细信息（如层次结构、标签等）。
+- **网络**：可以查看 Docker 网络的详细信息（如连接的容器、IP 地址范围等）。
+- **数据卷**：可以查看数据卷的详细信息（如挂载位置、使用的容器等）。
+
+### 
+
+
+
+此表格总结了 Docker 中常用的命令及其描述，帮助你快速查找和使用各种操作。
+
+![image-20250316140521315](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316140521315.png)
+
+
+
+这个容器是有着自己独立的隔离空间：独立的文件系统 内存空间 网络空间之类的
+
+还有自己的IP地址 端口也有
+
+e.g.
+
+`5700:5700` 中，第一个 `5700` 是 **容器内的端口**，第二个 `5700` 是 **主机的端口**。意思是将容器的端口 `5700` 映射到主机的 `5700` 端口，这样外部网络可以通过访问主机的 `5700` 端口来访问容器中的服务。
+
+这种就是端口映射
+
+
+
+![image-20250316140910573](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316140910573.png)
+
+
+
+**环境变量的作用**
+Docker 使用环境变量来传递启动参数这样可以避免在运行时手动编辑配置文件或使用命令行参数。对于 MySQL，常用的环境变量包括:
+·MYSQL ROOT PASSWORD:设置MySQL的 root用户密码。这是强制性的，如果未提供，容器将拒绝启动。这是为了安全性，确保默认的超级用户账户不会无密码暴露在外。
+MYSOL DATABASE:指定在容器启动后自动创建的数据库名称。
+·MYSOL USER和MYSOL PASSWORD:用于创建一个普通用户及其密码。其他环境变量:如字符集、排序规则等，也可以通过环境变量设置，
+这些环境变量允许用户在启动容器时快速配置数据库，而无需进入容器后再手动操作。
+
+![1742105379905](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1742105379905.png)
+
+![1742105384078](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1742105384078.png)
+
+
+
+---
+
+docker exec -it 容器名 bash
+
+进入到容器内部 交互 使用exec 通过 终端交互 bash
+
+---
+
+一般来说修改了程序的配置文件就需要重新加载 reload 
+
+
+
+**~的含义**
+是当前用户的 主目录(Home的快捷表示符。Directory)
+举例来说，**如果用户名是 hui,主目录通常是/home/hui**
+
+
+
+## 数据卷 （Volume）
+
+**了解数据卷是什么 有什么用**
+
+### 为什么需要 Docker 数据卷？
+
+1. **持久化数据**： 容器本身是临时的，数据存储在容器内的文件系统中，如果容器被删除或重新创建，容器内的数据也会丢失。为了避免这种情况，我们可以使用数据卷将数据保存在容器外部，这样数据可以在多个容器之间共享并持久化。
+2. **解耦应用和数据**： 数据卷使得数据独立于容器的生命周期，因此你可以轻松地更改或重建容器而不影响数据。通过数据卷，容器仅关注应用逻辑，而数据的存储与管理则交由数据卷来处理。
+3. **共享和管理数据**： 数据卷可以在多个容器之间共享，允许容器之间共享文件、配置等数据，支持分布式应用的部署和协同工作。
+4. **性能优化**： 数据卷通常比绑定挂载（bind mounts）提供更好的性能，尤其是在使用 Docker 进行高频读写操作时。因为数据卷由 Docker 管理，Docker 会为其优化性能。
+5. **方便备份和恢复**： 数据卷的数据可以轻松地备份、恢复和迁移。你可以将数据卷导出到本地文件系统，或者将其复制到其他系统中。
+
+![image-20250316144029221](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316144029221.png)
+
+
+
+![image-20250316144038844](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316144038844.png)
+
+方法一：
+
+![image-20250316145132008](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316145132008.png)
+
+数据卷在哪里呢 ： docker volume inspect 数据卷名     （查看在宿主机的挂载点）Mounpoint 
+
+方法二：（推荐）**可以自己指定目录挂载点**
+
+![image-20250316150216446](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150216446.png)
+
+![image-20250316150417909](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150417909.png)
+
+## 自定义镜像
+
+![image-20250316150456477](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150456477.png)
+
+
+
+**JVM（Java Virtual Machine）** 在不同操作系统上并不是使用相同的系统函数库。虽然 JVM 本身是跨平台的，并能够在不同操作系统上运行，但其底层与操作系统的交互部分（如文件 I/O、网络通信、内存管理等）会依赖于操作系统的系统函数库。
+
+所以还得**部署一个系统**在docker 中
+
+JVM 是 Java 虚拟机，是用来运行 Java 字节码的环境。它的核心职责是将编译后的.class字节码文件解释并运行。
+具体来说，JVM 是一个抽象的执0行环境，与具体的平台无关。
+
+JRE 是 Java 的运行环境，它包含了 JVM 和运行 Java 程序所需的库文件(如标准类库)。
+如果只想运行 Java 程序，JRE 就足够了。
+
+JDK是 Java 的开发工具包，包含了 JRE 和开发工具(如编译器javac 和调试工具 idb)如果需要开发 Java 程序，就需要安装 JDK。
+
+
+
+![image-20250316150802799](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150802799.png)
+
+![image-20250316150815275](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150815275.png)
+
+## DockerFile
+
+
+
+![image-20250316150823908](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150823908.png)
+
+![image-20250316150846102](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150846102.png)
+
+![image-20250316150900891](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316150900891.png)
+
+
+
+在 Docker 中，`docker save`  导出tar包 ，`tar` 包通常用来导出容器文件系统或镜像文件。你可以将一个容器的文件系统或者镜像导出为 `tar` 文件，然后将该文件传输到其他机器上，再通过 `docker load` 来加载镜像。
+
+
+
+## Docker 网络
+
+docker容器都有一个自己的ip地址
+
+![image-20250316151325929](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316151325929.png)
+
+
+
+
+
+这个ip地址都是由docker 网桥分配的 
+
+如果容器重启 的过程中也有容器启动了 此时这个容器的ip地址就会被新启动的这个容器占用
+
+所以配置就会很麻烦
+
+
+
+使用自定义网络： 核心通过**容器名**进行访问 （管你ip地址变来变去的）
+
+![image-20250316151733990](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316151733990.png)
+
+在创建容器 的时候 通过 --network 自定义网络名 就不会加入到默认的docker网桥了
 
 
 
@@ -879,5 +893,31 @@ permission denied：表示权限被拒绝，不能执行命令。
 
 
 
-# 虚拟机网络模式
+
+
+
+
+
+
+## Docker 部署 java 应用
+
+
+
+
+
+## Docker 部署前端应用
+
+
+
+
+
+
+
+
+
+## Docker Compose
+
+![1742109575390](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1742109575390.png)
+
+![1742109579308](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1742109579308.png)
 

@@ -1,5 +1,16 @@
 <span style="font-size:1.9em; font-weight:bold; color:#CC0000;">Indoor True Artifact DOC</span>
 
+**在 Java 中，实体类（VO、DTO、PO 等）通常实现 `Serializable` 接口，主要是为了 支持序列化，即对象可以被转换为字节流，以便存储或在网络上传输**
+
+| **序列化方式**                         | **Java `Serializable`**                           | **JSON 序列化**                                    |
+| -------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| **作用**                               | 把 Java 对象转换为 **字节流**，用于存储或网络传输 | 把 Java 对象转换为 **JSON 字符串**，用于前后端交互 |
+| **适用场景**                           | Redis 缓存、Java RMI 远程调用、深拷贝、消息队列   | HTTP 接口传输、存储 JSON 文件、前后端数据交换      |
+| **兼容性**                             | **只能用于 Java**，不同 Java 版本可能不兼容       | **跨语言（JavaScript、Python、Go 等）通用**        |
+| **存储格式**                           | **二进制格式**，不易阅读                          | **文本格式**，可读性强                             |
+| **性能**                               | **高效**（二进制存储，解析快）                    | **较低**（文本存储，需要解析 JSON）                |
+| **是否必须 `implements Serializable`** | **必须**                                          | **不需要**（Jackson/Gson 只需要 `getter/setter`）  |
+
 # 项目recall
 
 根据阿里巴巴《Java 开发手册》的分层规范，以下是各层方法命名的典型约定（注：手册会随版本更新调整，以下内容基于常见规范整理）：
@@ -4163,7 +4174,77 @@ public class OrderServiceImpl implements OrderService {
 
 
 
-## 订单支付
+## 微信·订单支付 （不要死记 学习这种流程思想 不会的时候学会看文档 --> 关键技能）
+
+
+
+
+
+
+
+![image-20250314203355084](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314203355084.png)
+
+![image-20250314203400398](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314203400398.png)
+
+**微信支付接口**：
+
+
+
+
+
+![image-20250314203702959](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314203702959.png)
+
+![image-20250314203912149](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314203912149.png)
+
+
+
+## 微信支付的准备工作
+
+
+
+### 数字签名 加密/解密  & 内网穿透
+
+![image-20250314204458553](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314204458553.png)
+
+
+
+![image-20250314204259920](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314204259920.png)
+
+
+
+使用 **cpolar** 进行 内网穿透
+
+
+
+----
+
+
+
+linux 启动程序 ./app 
+
+win 则是 app.exe
+
+![image-20250314211750356](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314211750356.png)
+
+
+
+
+
+### 代码导入 配置 （只要知道流程就行）
+
+![image-20250314213939682](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314213939682.png)
+
+
+
+![image-20250314214005348](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314214005348.png)
+
+
+
+
+
+### 具体支付流程的代码 见项目 C端的Order 层
+
+[流程解释](https://www.bilibili.com/video/BV1TP411v7v6?spm_id_from=333.788.videopod.episodes&vd_source=9570fc9c9829e70449f020506364bf36&p=121)
 
 
 
@@ -4269,8 +4350,8 @@ public class OrderTask {
             });
         }
     }
-
-    // 处理一直处于派送中的订单 这里是要管理平台点击确认到货的
+    
+    // 处理一直处于派送中的订单 这里是要管理平台点击确认到货的 如果管理端不确认的话就会触发定时任务
     @Scheduled(cron = " 0 0 1 * * ?") // 每天凌晨一点
     public void processDeliveryOrder() {
         log.info("定时处理一直处于派送中的订单:{}",LocalDateTime.now());
@@ -4318,7 +4399,312 @@ public class OrderTask {
 
 ![image-20250309191251269](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250309191251269.png)
 
+~~~java
+    @Select("select * from orders where status = #{status} and order_time < #{time}")
+    List<Orders> getByStatusAndOrderTimeLT(Integer status, LocalDateTime time);
+~~~
 
+
+
+通过对mybaties@Param注解相关源码进行分析，知道了没有添加@Param注解时会通过Parameter反射类去获取方法的参数名，众所周知java反射机制效率很低，所以在jdk1.8及以上版本项目中如果没有设置Mybatie的isUseActualParamName=false
+
+在传递参数时尽量使用@Param注解
+
+---
+
+
+
+mybatis 参数 @Params 注解问题
+
+![image-20250314175346802](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314175346802.png)
+
+---
+
+## websocket基本概念
+
+![image-20250314180424688](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314180424688.png)
+
+
+
+![image-20250314180545329](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314180545329.png)
+
+
+
+右边这个就是连接的生命周期
+
+**回调方法**（Callback Method）是一种 **由某个代码逻辑调用，而不是直接在程序流程中调用的方法**。通常，回调方法作为 **参数** 传递给另一个方法，并在特定条件下被执行。
+
+就是将函数作为函数的参数
+
+![](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314180833392.png)
+
+
+
+![image-20250314182314866](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314182314866.png)
+
+<span style="color:#FF0000; font-size:1.4em;">websocket客户端</span>
+
+
+
+~~~html
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Demo</title>
+</head>
+<body>
+    <input id="text" type="text" />
+    <button onclick="send()">发送消息</button>
+    <button onclick="closeWebSocket()">关闭连接</button>
+    <div id="message">
+    </div>
+</body>
+<script type="text/javascript">
+    var websocket = null;
+    var clientId = Math.random().toString(36).substr(2);
+
+    //判断当前浏览器是否支持WebSocket
+    if('WebSocket' in window){
+        //连接WebSocket节点
+        websocket = new WebSocket("ws://localhost:8080/ws/"+clientId);
+    }
+    else{
+        alert('Not support websocket')
+    }
+
+    //连接发生错误的回调方法
+    websocket.onerror = function(){
+        setMessageInnerHTML("error");
+    };
+
+    //连接成功建立的回调方法
+    websocket.onopen = function(){
+        setMessageInnerHTML("连接成功");
+    }
+
+    //接收到消息的回调方法
+    websocket.onmessage = function(event){
+        setMessageInnerHTML(event.data);
+    }
+
+    //连接关闭的回调方法
+    websocket.onclose = function(){
+        setMessageInnerHTML("close");
+    }
+
+    //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+    window.onbeforeunload = function(){
+        websocket.close();
+    }
+
+    //将消息显示在网页上
+    function setMessageInnerHTML(innerHTML){
+        document.getElementById('message').innerHTML += innerHTML + '<br/>';
+    }
+
+    //发送消息
+    function send(){
+        var message = document.getElementById('text').value;
+        websocket.send(message);
+    }
+	
+	//关闭连接
+    function closeWebSocket() {
+        websocket.close();
+    }
+</script>
+</html>
+
+~~~
+
+---
+
+![image-20250314182233495](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314182233495.png)
+
+
+
+<span style="color:#FF0000; font-size:1.4em;">websocket组件需要导入配置类注册</span>
+
+~~~java
+/**
+ * WebSocket配置类，用于注册WebSocket的Bean
+ */
+@Configuration
+public class WebSocketConfiguration {
+
+    @Bean
+    public ServerEndpointExporter serverEndpointExporter() {
+        return new ServerEndpointExporter();
+    }
+
+}
+
+~~~
+
+
+
+<span style="color:#FF0000; font-size:1.4em;">**定时任务**</span>
+
+~~~java
+@Component
+public class WebSocketTask {
+    @Autowired
+    private WebSocketServer webSocketServer;
+
+    /**
+     * 通过WebSocket每隔5秒向客户端发送消息
+     */
+    @Scheduled(cron = "0/5 * * * * ?")
+    public void sendMessageToClient() {
+        webSocketServer.sendToAllClient("这是来自服务端的消息：" + DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.now()));
+    }
+}
+
+~~~
+
+<span style="color:#FF0000; font-size:1.4em;">**websocket服务端**</span>
+
+~~~java
+/**
+ * WebSocket服务
+ */
+@Component
+@ServerEndpoint("/ws/{sid}")
+public class WebSocketServer {
+
+    //存放会话对象
+    private static Map<String, Session> sessionMap = new HashMap();
+
+    /**
+     * 连接建立成功调用的方法
+     */
+    @OnOpen // 这里的注解就是表示该方法是回调方法
+    public void onOpen(Session session, @PathParam("sid") String sid) {
+        System.out.println("客户端：" + sid + "建立连接");
+        sessionMap.put(sid, session);
+    }
+
+    /**
+     * 收到客户端消息后调用的方法
+     *
+     * @param message 客户端发送过来的消息
+     */
+    @OnMessage  // 收到客户端信息后 执行
+    public void onMessage(String message, @PathParam("sid") String sid) {
+        System.out.println("收到来自客户端：" + sid + "的信息:" + message);
+    }
+
+    /**
+     * 连接关闭调用的方法
+     *
+     * @param sid
+     */
+    @OnClose
+    public void onClose(@PathParam("sid") String sid) {
+        System.out.println("连接断开:" + sid);
+        sessionMap.remove(sid);
+    }
+
+    /**
+     * 群发
+     *
+     * @param message
+     */
+    public void sendToAllClient(String message) {
+        Collection<Session> sessions = sessionMap.values();
+        for (Session session : sessions) {
+            try {
+                //服务器向客户端发送消息
+                session.getBasicRemote().sendText(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+}
+
+~~~
+
+
+
+## websocket 实际运用
+
+![image-20250314193657940](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314193657940.png)
+
+
+
+### 来单提醒 
+
+~~~java
+  public void paySuccess(String outTradeNo) {
+
+        // 根据订单号查询订单
+        Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+
+        // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
+        Orders orders = Orders.builder()
+                .id(ordersDB.getId())
+                .status(Orders.TO_BE_CONFIRMED)
+                .payStatus(Orders.PAID)
+                .checkoutTime(LocalDateTime.now())
+                .build();
+
+        orderMapper.update(orders);
+
+        // 通过websocket 向客户端推送信息
+        // 要以json的格式推送信息到客户端
+        Map mp = new HashMap();
+        mp.put("type", 1);
+        // 1表示来单提醒 2 表示客户催单
+        mp.put("orderId", ordersDB.getId());
+        mp.put("content", "订单号：" + outTradeNo);
+        String json = JSONObject.toJSONString(mp);
+        // 推送消息
+        webSocketServer.sendToAllClient(json);
+
+
+
+    }
+~~~
+
+其余部分具体见微信支付模块
+
+
+
+
+
+### 客户催单
+
+~~~java
+   @Override
+    public void reminder(Long id) {
+
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(id);
+
+        if(ordersDB == null) {
+            // 抛出异常
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND)；
+        }
+        Map mp = new HashMap<>();
+        mp.put("type", 2);
+        mp.put("orderId", id);
+        mp.put("content", "订单号：" + ordersDB.getNumber());
+        String json = JSONObject.toJSONString(mp);
+        webSocketServer.sendToAllClient(json);
+    }
+~~~
+
+**其他具体内容见订单部分和websocket 基础部分**
+
+
+
+
+
+---
 
 
 
@@ -4326,9 +4712,264 @@ public class OrderTask {
 
 
 
+![image-20250314223800717](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314223800717.png)
 
 
 
+https://echarts.apache.org/zh/index.html
+
+
+
+**本质还是数据库查询动态数据**
+
+
+
+![image-20250314230049203](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250314230049203.png)
+
+
+
+
+
+## 可视化数据展示
+
+
+
+### 营业额统计
+
+
+
+| **数据库类型**         | **Java 类型**                      | **说明**                              |
+| :--------------------- | :--------------------------------- | :------------------------------------ |
+| `INT`/`INTEGER`        | `int`/`Integer`                    | 优先使用包装类`Integer`避免`Null`问题 |
+| `VARCHAR`/`TEXT`       | `String`                           |                                       |
+| `DECIMAL`/`NUMERIC`    | `BigDecimal`                       | 高精度计算场景必选                    |
+| `FLOAT`/`DOUBLE`       | `float`/`Float`或`double`/`Double` | 科学计算场景适用                      |
+| `DATE`                 | `java.time.LocalDate`              | Java 8+ 推荐                          |
+| `DATETIME`/`TIMESTAMP` | `java.time.LocalDateTime`          | 带时区时使用`ZonedDateTime`           |
+| `BOOLEAN`              | `boolean`/`Boolean`                | 部分数据库用`TINYINT(1)`模拟          |
+| `BLOB`                 | `byte[]`                           | 二进制数据存储                        |
+
+
+
+~~~java
+@RestController
+@RequestMapping("/admin/report")
+@Slf4j
+@Api(tags = "数据统计相关接口")
+public class ReportController {
+    @Autowired
+    private ReportService reportService;
+
+    @GetMapping("/turnoverStatistics")
+    public Result<TurnoverReportVO>  reportTurnoverStatistics(
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end
+            ) {
+        // 查询 什么数据库 order 表
+        // 统计已完成的订单 且时间在beginTime和endTime之间 根据order_time
+        TurnoverReportVO turnoverReportVO = reportService.reportTurnoverStatistics(begin, end);
+        return Result.success(turnoverReportVO);
+    }
+
+}
+~~~
+
+
+
+
+
+~~~java
+  @Override
+    public TurnoverReportVO reportTurnoverStatistics(LocalDate begin, LocalDate end) {
+        // 获取时间集合
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        LocalDate beginTemp = begin;
+        // 先加入第一天
+        while (!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        }
+        // 将时间全部加入到集合时批量查询！！！
+        // 日期API 查询文档现用先查！！！
+        List<Map<String,Object >> mountList = orderMapper.getTurnoverByDays(dateList);
+        // 使用map 接收每条数据库查询到的数据！！！
+        int size = dateList.size();
+        List<Double> amounts = new ArrayList<>(Collections.nCopies(size, 0.0));
+        mountList.forEach(map -> {
+            java.sql.Date sqlDate = (java.sql.Date) map.get("time");
+            LocalDate time = sqlDate.toLocalDate();
+            BigDecimal amount = (BigDecimal) map.get("amount");
+            Double amountDouble = amount.doubleValue();  // 将 BigDecimal 转换为 Double
+
+            amounts.set((int)ChronoUnit.DAYS.between(beginTemp, time), amountDouble);
+        });
+        System.out.println(amounts);
+        String joinDate = StringUtils.join(dateList, ",");
+        String joinMount = StringUtils.join(amounts, ",");
+
+        return TurnoverReportVO.builder()
+                .dateList(joinDate)
+                .turnoverList(joinMount)
+                .build();
+
+    }
+~~~
+
+
+
+~~~xml
+	<select id="getTurnoverByDays" resultType="java.util.Map">
+	SELECT DATE(order_time) as time , sum(amount) as amount
+	FROM orders
+	WHERE DATE(order_time) IN
+	<foreach item="time" index="index" collection="dateList" open="(" separator="," close=")">
+		#{time}
+	</foreach>
+	AND status = 5
+	GROUP BY DATE(order_time)
+</select>
+~~~
+
+#### 思路拓宽
+
+**也可以这样**
+
+
+
+![image-20250315151708479](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250315151708479.png)
+
+![image-20250315151702188](C:/Users/33813/AppData/Roaming/Typora/typora-user-images/image-20250315151702188.png)
+
+
+
+
+
+### 用户统计
+
+~~~java
+  @Override
+    public UserReportVO reportUserStatistics(LocalDate begin, LocalDate end) {
+
+        List<LocalDate> dateList = new ArrayList<>();
+        LocalDate date = begin;
+        dateList.add(begin);
+        while(!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        }
+        List<Long> newUserList = new ArrayList<>();
+        for (LocalDate localDate : dateList) {
+            Long count = userMapper.getUserCountByDate(localDate);
+            if (count != null) {
+                newUserList.add(count);
+            }else {
+                newUserList.add(0L);
+            }
+
+        }
+        int size = dateList.size();
+
+        Long totalUser = userMapper.getUserTotalLE(date);
+        List<Long> totalUserList = new ArrayList<>(Collections.nCopies(size,totalUser));
+
+        for(int i = 1; i < newUserList.size(); i++) {
+            totalUserList.set(i, newUserList.get(i) + totalUserList.get(i - 1));
+            // 前缀和
+        }
+
+
+        return UserReportVO.builder()
+                .dateList(StringUtils.join(dateList, ","))
+                .totalUserList(StringUtils.join(totalUserList, ","))
+                .newUserList(StringUtils.join(newUserList, ","))
+                .build();
+
+    }
+~~~
+
+
+
+~~~java
+    @Select("select count(id) from user where date(create_time) < #{date}")
+    Long getUserTotalLE(LocalDate date);
+~~~
+
+
+
+
+
+在 SQL 查询中，`count(id)` 是用来统计某个字段（在这个例子中是 `id` 字段）的非空值的数量。具体来说：
+
+- `count(id)` 会统计 `user` 表中 `id` 字段的非空值的数量。`count` 函数在统计时会忽略 `NULL` 值，因此它只会计算 `id` 列中存在值的行数。
+
+你问的 "为什么要写这个参数" 是因为：
+
+- 在 `count` 函数中，通常选择一个确定的字段来进行计数。在这里，`id` 字段被用作计数的依据，因为 `id` 字段一般是主键，通常不为空。
+
+---
+
+
+
+### 订单统计
+
+
+
+
+
+
+
+
+
+### 销量排名
+
+~~~java
+@Override
+    public SalesTop10ReportVO reportTop10(LocalDate begin, LocalDate end) {
+        // 根据时间段 查询所有状态为已完成的orders订单表
+        // 然后根据订单表查询订单详情表  这里不用分两步 ！！！完全可以多表查询
+        // 对每个菜品统计number最好是用map  ！！！重复的相加怎么办 使用分组查询 然后使用数据结构接收
+        // 然后排序 取出前十 ！！！可以利用sql语句的order by desc
+
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
+        // 获取更精度更高的时间
+        Map<String, Object> mp = new HashMap<>();
+        mp.put("beginTime", beginTime);
+        mp.put("endTime", endTime);
+        // 用map封装更方便传参和使用
+        List<GoodsSalesDTO> goodsSalesList = orderDetailMapper.getGoodsSales(mp);
+        List<String> nameList = new ArrayList<>();
+        List<Integer> numberList = new ArrayList<>();
+        goodsSalesList.forEach(good -> {
+            String name = good.getName();
+            Integer number = good.getNumber();
+            nameList.add(name);
+            numberList.add(number);
+        });
+
+        // stream 流写法
+        // List<String> nameList = goodsSalesList.stream().map(GoodsSalesDTO::getName).collect(Collectors.toList());
+        // List<Integer> numberList = goodsSalesList.stream().map(GoodsSalesDTO::getNumber).collect(Collectors.toList());
+//        List.of() 方法（集合用法很重要）以及stream 流 用法 两者结合 无敌！！！
+
+
+        return SalesTop10ReportVO.builder()
+                .nameList(StringUtils.join(nameList, ","))
+                .numberList(StringUtils.join(numberList, ","))
+                .build();
+    }
+~~~
+
+
+
+~~~xml
+	<select id="getGoodsSales" resultType="com.sky.dto.GoodsSalesDTO">
+		select od.name,sum(od.number) as number from order_detail od
+		left join orders o on od.order_id = o.id where o.status = 5 and o.order_time BETWEEN #{beginTime} AND #{endTime}
+		group by od.name order by number desc
+	</select>
+~~~
 
 
 
@@ -4340,6 +4981,20 @@ public class OrderTask {
 
 
 
+## 工作台
+
+**接口设计：**
+
+
+
+![image-20250315202722338](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250315202722338.png)
+
+
+
+
+
+## Excel 代码导出
+
 
 
 
@@ -4348,7 +5003,249 @@ public class OrderTask {
 
 
 
-# VUE Recollection
+# VUE Recollection and frontend 重点大纲
+
+## html+css
+
+### basic
+
+~~~html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <hr>
+  <b>a</b>
+  <u>r</u>
+  <i>c</i>
+  <s>water</s>
+  <a href="" target="_parent">parent</a>
+  <a href="" target="_top">top</a>
+  <br>
+  <span>
+    段落1
+  </span>
+  <br>
+  <span>
+    段落2
+  </span>
+  <p>段落1</p>
+  <p>段落2</p>
+</body>
+</html>
+~~~
+
+
+
+### pattern
+
+~~~html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <p>
+    <!-- diy list 默认显示缩进-->
+  <dl>
+    <dt>主题1</dt>
+    <dd>内容1</dd>
+    <dd>内容1</dd>
+    <dt>主题2</dt>
+    <dd>内容2</dd>
+    <dd>内容2</dd>
+  </dl>
+  <!-- unorder list -->
+  <ul>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+  </ul>
+  <!-- order list -->
+  <ol>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+    <li>test</li>
+  </ol>
+  <!-- li可以包含任意内容 -->
+  </p>
+  <!-- ------------- -->
+  
+  <!-- th （table head）和 td （table data ） 区别  -->
+  <p>
+    <table border="1" cellspacing="0" cellpadding="5">
+      <!-- cell 单元格 
+            spacing 间距
+            padding 一个单元格内的padding 内边距 -->
+      <tr>
+        <td >姓名</td>
+        <td>年龄</td>
+        <td>成绩</td>
+      </tr>
+      <tr>
+        <td>张三</td>
+        <td>18</td>
+        <td>80</td>
+      </tr>
+      <tr>
+        <td>李四</td>
+        <td>19</td>
+        <td>90</td>
+      </tr>
+      <tr>
+        <td>王五</td>
+        <td>20</td>
+        <td>100</td>
+      </tr>
+    </table>
+  </p>
+
+  <p>
+    <table border="1" cellspacing="0" >
+      <tr>
+          <th></th> <!-- 左上角空白单元格 -->
+          <th rowspan="2">数学</th>
+          <th>英语</th>
+          <th colspan="2">语文</th>
+      </tr>
+      <tr>
+          <th rowspan="2">张三</th>
+          <td>85</td>
+          <td>90</td>
+          <td>88</td>
+      </tr>
+      <tr>
+          <th>李四</th>
+          <td>78</td>
+          <td>95</td>
+          <td>80</td>
+      </tr>
+      <tr>
+          <th>王五</th>
+          <td>92</td>
+          <td>89</td>
+          <td>94</td>
+      </tr>
+  </table>
+  
+  </p>
+
+
+</body>
+
+</html>
+~~~
+
+### form
+
+~~~html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #onlyOne {
+      color: red;
+      font-size: 30px;
+      /* width: 450px;
+      height: 100px; */
+      resize: none;
+      /* 禁止调整大小 */
+      padding-left: 30px;
+
+    }
+  </style>
+</head>
+
+<body>
+  <input type="text" name="username" placeholder="请输入用户名" value="admin">
+  <!-- "Non-Breaking Space"（不换行空格） -->
+  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+  <input type="password" name="password" placeholder="请输入密码" value="123456">
+  <input type="submit" value="登录">
+  <button type="submit">提交</button>
+  <button type="reset">重置</button>
+  <br>
+  <input type="radio" name="sex">男
+  <input type="radio" name="sex">女
+  <!-- 分组 单选框 -->
+  <input type="radio">binary
+  <input type="checkbox" checked>选中
+  <input type="file" name="file" id="file">
+
+  <br>
+  <span style="color: blue;font-size: 70px;">标签 内置style 属性书写示例</span>
+
+  <br>
+
+  <textarea name="表单的name as a key to get value" id="onlyOne" placeholder="请输入文本"></textarea>
+  <!-- 在表单中，每个输入框（<input>、<textarea>、<select> 等）通常都需要设置 name 属性，这样服务器才能识别并处理表单中的数据。 -->
+  <!-- cols rows 可用css 属性 width height 替代  -->
+
+  <br>
+  <label><span>测试label 点击lable文本也会聚焦表单</span><input type="radio" checked></label>
+  <!-- checked 默认的选择操作  -->
+
+  <br>
+  <hr>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+
+    <label>选择文件： <input type="file" id="file" name="file" required></label>
+    <!-- 表单require 强制输入 前端校验数据 和 后端校验数据都需要哦 -->
+    <br>
+
+    <button type="submit">上传文件</button>
+    <br>
+
+    上传多个文件<input type="file"  multiple>
+  </form>
+  <br>
+  <hr>
+  <select name="" id="">
+    <option value="">China</option>
+    <option value="">England</option>
+    <option value="">America</option>
+    <option value="">Japan</option>
+  </select>
+  <!-- name 一般都是提交的时候作为键的 -->
+   <!-- 然后value 就是作为值 -->
+    <!-- 两者一一对应 -->
+
+
+</body>
+
+</html>
+~~~
+
+
+
+## js
+
+
+
+## ajax promise axios 异步编程
+
+
+
+
+
+## Vue3
 
 
 
