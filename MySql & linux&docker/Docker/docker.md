@@ -885,21 +885,41 @@ docker容器都有一个自己的ip地址
 
 ![image-20250316151733990](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250316151733990.png)
 
-在创建容器 的时候 通过 --network 自定义网络名 就不会加入到默认的docker网桥了
-
-
-
-
-
-
-
-
-
-
-
-
+在创建容器 的时候 通过 -**-network 自定义网络名** 就不会加入到默认的docker网桥了
 
 ## Docker 部署 java 应用
+
+
+
+![image-20250317211627897](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317211627897.png)
+
+
+
+![image-20250317211636330](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317211636330.png)
+
+
+
+![image-20250317211349180](C:/Users/33813/AppData/Roaming/Typora/typora-user-images/image-20250317211349180.png)
+
+
+
+然后使用配置类接收这些配置参数后在一些模块当中使用
+
+
+
+`docker save` 和 `docker load` 用于在不同环境之间传输 Docker 镜像，尤其是在没有网络或私有环境下进行镜像备份和恢复。
+
+其中docker build 用于通过dockerfile 构建 docker 镜像 
+
+save 构建tar包
+
+load 从tar包还原镜像
+
+---
+
+
+
+## 
 
 
 
@@ -907,11 +927,33 @@ docker容器都有一个自己的ip地址
 
 ## Docker 部署前端应用
 
+![image-20250317211952383](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317211952383.png)
+
+![image-20250317212019681](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212019681.png)
+
+这里要通过nginx 部署两个前端工程
 
 
 
+![image-20250317212021987](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212021987.png)
+
+端口位置不一样
+
+![image-20250317212108655](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212108655.png)
+
+这里后端api路径就不用主机 使用容器名 cause 容器是通过容器名之间相互通信的（前提是都在一个自定义网桥里）
 
 
+
+![image-20250317212310972](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212310972.png)
+
+
+
+![image-20250317212316907](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212316907.png)
+
+
+
+学会查看官方文档 查看conf 配置文件在容器内那个目录下
 
 
 
@@ -921,3 +963,36 @@ docker容器都有一个自己的ip地址
 
 ![1742109579308](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/1742109579308.png)
 
+
+
+![image-20250317212658757](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212658757.png)
+
+
+
+~~~ymal
+networks :
+custom network:
+		name:my custom netwo
+~~~
+
+
+
+在 `docker-compose.yml` 中，`networks` 块下的键（如 `my-custom-network`）是 **Compose 文件的内部标识符**，而 `name` 属性是 **Docker 引擎中实际的网络名称**。
+
+一个compose 内的所有容器使用这个标识符通信 
+
+外部容器使用name 下的网络通信
+
+
+
+
+
+---
+
+
+
+![image-20250317212525485](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250317212525485.png)
+
+**docker compose up -d** 
+
+ (一般 -d 都是daemon 也就是**后台**（守护）进程)
