@@ -3,7 +3,22 @@
 **debian复制粘贴共享问题：**
 
 sudo apt-get install open-vm-tools
-sudo apt-get install open-vm-tools-desktop
+sudo apt-get install open-vm-tools-desktop\
+
+
+
+debian 窗口大小问题
+
+
+
+
+
+安装介质（Installation Media）是指用于安装操作系统的载体，通常包含操作系统的安装文件（如 ISO 镜像）。常见的安装介质包括：
+
+- **U盘**（最常用）
+- **光盘（DVD/CD）**
+- **网络启动（PXE）**
+- **虚拟机镜像（如 VMware/VirtualBox 的虚拟光驱）**
 
 ## docker 安装 
 
