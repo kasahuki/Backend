@@ -475,19 +475,137 @@ where 首先过滤 之后在此基础上进行聚合函数的操作(分组) 分�
 
 ## 3.子查询
 
-
+![image-20250417215239480](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215239480.png)
 
 #### 标量子查询
 
+
+
 #### 列子查询
 
+![image-20250417215246109](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215246109.png)
+
+**多行数据==不能使用==等于运算符**
+
 #### 行子查询
+
+![image-20250417215309011](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215309011.png)
+
+![image-20250417215542098](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215542098.png)
+
+
+
+![image-20250417215550271](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215550271.png)
 
 #### 表子查询
 
 
 
+![image-20250417215635244](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215635244.png)
 
+
+
+![image-20250417215644858](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215644858.png)
+
+设置别名
+
+
+
+![image-20250417215700125](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215700125.png)
+
+
+
+![image-20250417215751559](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215751559.png)
 
 # 5.事务
+
+![781c95484310110a81382c0b1abbf80](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/781c95484310110a81382c0b1abbf80.jpg)
+
+![d2e4d3b8473113bc3b79111b7973994](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/d2e4d3b8473113bc3b79111b7973994.jpg)
+
+![image-20250417215815643](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215815643.png)
+
+**脏读问题：**
+
+![image-20250417215848314](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215848314.png)
+
+在 SQL 中，**事务的隔离级别**决定了**一个事务在提交前更新的数据，其他事务读取时看到的是更新前的版本还是更新后的版本**。、
+
+
+
+**不可重复读问题：**
+
+
+
+![image-20250417215838646](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215838646.png)
+
+
+
+**幻读问题：**
+
+
+
+![image-20250417215931381](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417215931381.png)
+
+这里是假设**已经解决不可重复读问题**的基础上
+
+解决了指的是当前事务读不到别的事务commit后的数据库，相当于自己copy了一份数据库作为自己的局部变量
+
+也就是保证了两次的读到的数据是一样的
+
+
+
+## 事务的隔离级别 -- 解决事务并发问题
+
+![image-20250417220126788](https://cdn.jsdelivr.net/gh/kasahuki/os_test@main/img/image-20250417220126788.png)
+
+不可重复”(Non-Repeatable)的
+含义
+“不可重复”强调的是在同一个事务中，对同一数据的多次读取无法得到一致的结果。换句话说，事务无法“重复”地读取到相同的值。这是从事务内部的视角出发的，反映了事务在读取数据时的不一致性。
+
+---
+
+
+
+**Read Uncommitted(读未提交)**
+
+**名字解释:**允许一个事务读取到其他事务尚未提交的数据(即“未提交”的数据)
+
+解决并发问题:这种隔离级别几乎不解决并发问题，因为它允许事务读取到其他事务的“脏数据”(即未提交的数据)。例如，事务A正在修改数据事务B读取了事务A修改后的数据，但事务A最终回滚，事务B读取到的数据就不存在了。
+并发问题:无法防止脏读、不可重复速和幻读
+
+---
+
+
+
+**Read Committed(读已提交)**
+
+**名字解释:**一个事务只能读取到其他事务已经提交的数据。
+
+**解决并发问题:**通过限制事务只能读取已提交的数据，解决了“脏读”问题。事务A修改数据但未提交时，事务B无法读取到事务A修改后的数据，只有当事务A提交后，事务B才能读取到新的数据。
+并发问题:仍然无法防止不可重复读和幻读。例如，事务A先读取了数据。事务B修改并提交了数据，事务A再次读取时，数据可能已经改变
+
+---
+
+
+
+**Repeatable Read(可重复读)**
+
+**名字解释:**在一个事务内，对于同一行数据的多次读取结果必须是一致的，即使其他事务修改了数据。
+
+**解决并发问题:**通过锁定事务第一次读取的行，防止其他事务修改这些行，从而解决了不可重复读问题。例如
+
+，事务A第一次读取了某行数据后，其他事务无法修改这行数据，直到事务A提交或回滚。
+并发问题:仍然无法防止幻读。幻读是指事务A读取了某个范围的数据，事务B在这个范围内插入了新的数据，事务A再次读取时会发现多出了一些数据。
+
+---
+
+
+
+**Serializable(可串行化)**
+
+**名字解释:**将多个并发事务串行化执行，即让事务按照某种顺序依次执行，如同它们是串行的。
+
+**解决并发问题:**通过严格的锁定机制，确保事务之间完全隔离。事务A和事务B的执行顺序被明确安排，事务A执行时，事务B必须等待，反之亦然。这种方式可以防止脏读、不可重复读和幻读。
+并发问题:虽然解决了所有并发问题，但代价是性能和并发性。因为事务需要等待其他事务完成，导致系统吞吐量降低。
 
